@@ -6,20 +6,20 @@ import { ShoppingBag, Trash2, Scissors, Droplet, BookOpen, Utensils } from "luci
 // Use inside /app/seva-board/page.tsx
 
 const boardData = {
-  date: "01/11/2025",
-  day: "Saturday",
+  date: "03/11/2025",
+  day: "Monday",
   sections: [
-    { icon: ShoppingBag, title: "Vegetable Purchasing", people: ["Dhraj PR", "P. Khinash PR"] },
+    { icon: ShoppingBag, title: "Vegetable Purchasing", people: ["Shivam PR", "P. Hemanth PR"] },
     { icon: Trash2, title: "Garbage Cleaning", people: ["Y/S Tapas"] },
-    { icon: Scissors, title: "Vegetable Cutting", people: ["Anand PR", "Devnath PR"] },
-    { icon: Droplet, title: "Vessel Washing", people: ["HG HDK PRJI", "Niloy PR"] },
+    { icon: Scissors, title: "Vegetable Cutting", people: ["Anshu PR", "Anand Pr "] },
+    { icon: Droplet, title: "Vessel Washing", people: ["Ravi Pr", "Sarthak PR"] },
     { icon: Utensils, title: "Mini Cleaning", people: [] },
     {
       icon: Utensils,
       title: "Offering",
       times: {
         Morning: ["Somesh PR"],
-        Afternoon: ["Sarthak PR"],
+        Afternoon: ["Anshu PR"],
         Evening: ["Jaleshwar PR"],
       },
     },
@@ -27,18 +27,18 @@ const boardData = {
       icon: Utensils,
       title: "Serving",
       times: {
-        Morning: ["Anshu PR"],
-        Afternoon: ["Deepak PR"],
+        Morning: ["Deepak PR"],
+        Afternoon: ["HG HKP PRJI"],
         Evening: ["Prateek PR"],
       },
     },
-    { icon: BookOpen, title: "Book Reading", people: [] },
+    { icon: BookOpen, title: "Book Reading", people: ["HG SKP Prji"] },
     {
       icon: Droplet,
       title: "Mopping",
       times: {
-        Morning: ["Ravi PR"],
-        Afternoon: ["Nikhil PR"],
+        Morning: ["Devnath PR"],
+        Afternoon: ["Rahul PR"],
         Evening: ["Barun PR"],
       },
     },
@@ -62,7 +62,7 @@ export default function SevaBoardPage() {
 
         <div className="text-center border-b-4 border-yellow-700 mb-6 pb-2">
           <h2 className="text-3xl font-extrabold tracking-wide uppercase text-yellow-900">
-            Seva Duty Board
+            Seva  Board
           </h2>
         </div>
 
@@ -116,7 +116,7 @@ export default function SevaBoardPage() {
         </div>
 
         <div className="text-sm text-center text-yellow-700 mt-6 border-t pt-2 font-medium">
-          VOICE Ashram — Seva Board for Devotees
+          REMUNA VOICE  — Seva Board for Devotees
         </div>
       </div>
     </div>
