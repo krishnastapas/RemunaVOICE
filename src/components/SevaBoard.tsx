@@ -6,20 +6,20 @@ import { ShoppingBag, Trash2, Scissors, Droplet, BookOpen, Utensils } from "luci
 // Use inside /app/seva-board/page.tsx
 
 const boardData = {
-  date: "03/11/2025",
-  day: "Monday",
+  date: "04/11/2025",
+  day: "Tuesday",
   sections: [
-    { icon: ShoppingBag, title: "Vegetable Purchasing", people: ["Shivam PR", "P. Hemanth PR"] },
+    { icon: ShoppingBag, title: "Vegetable Purchasing", people: ["", ""] },
     { icon: Trash2, title: "Garbage Cleaning", people: ["Y/S Tapas"] },
-    { icon: Scissors, title: "Vegetable Cutting", people: ["Anshu PR", "Anand Pr "] },
-    { icon: Droplet, title: "Vessel Washing", people: ["Ravi Pr", "Sarthak PR"] },
+    { icon: Scissors, title: "Vegetable Cutting", people: ["Dhiraj PR", "Devanth Pr ","Niloy Pr"] },
+    { icon: Droplet, title: "Vessel Washing", people: ["Anshu Pr", "Shivam PR"] },
     { icon: Utensils, title: "Mini Cleaning", people: [] },
     {
       icon: Utensils,
       title: "Offering",
       times: {
-        Morning: ["Somesh PR"],
-        Afternoon: ["Anshu PR"],
+        Morning: ["Dhiraj PR"],
+        Afternoon: ["Hemant PR"],
         Evening: ["Jaleshwar PR"],
       },
     },
@@ -27,19 +27,19 @@ const boardData = {
       icon: Utensils,
       title: "Serving",
       times: {
-        Morning: ["Deepak PR"],
-        Afternoon: ["HG HKP PRJI"],
-        Evening: ["Prateek PR"],
+        Morning: ["Rahul PR"],
+        Afternoon: ["Nikhil Pr"],
+        Evening: ["Ravi PR"],
       },
     },
-    { icon: BookOpen, title: "Book Reading", people: ["HG SKP Prji"] },
+    { icon: BookOpen, title: "Book Reading", people: ["HG HDK Pr"] },
     {
       icon: Droplet,
       title: "Mopping",
       times: {
-        Morning: ["Devnath PR"],
-        Afternoon: ["Rahul PR"],
-        Evening: ["Barun PR"],
+        Morning: ["Deepak  PR"],
+        Afternoon: ["Sarthak PR"],
+        Evening: ["Anand PR"],
       },
     },
   ],
