@@ -40,7 +40,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, form.email, form.password);
       router.push("/user/dashboard");
-    } catch (err) {
+    } catch (err: unknown) {
       const error = err as FirebaseError;
       setMessage("❌ " + (error.message || "Login failed"));
     } finally {
@@ -82,7 +82,7 @@ export default function LoginPage() {
       }
 
       router.push("/user/dashboard");
-    } catch (err) {
+    } catch (err: unknown) {
       const error = err as FirebaseError;
       setMessage("❌ " + (error.message || "Google Login failed"));
     } finally {
@@ -97,8 +97,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-yellow-100 to-yellow-50 px-4">
       <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-sm border-2 border-yellow-600">
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-center text-yellow-800 mb-6">
-          🪔 Devotee Login
+        <h2 className="text-3xl font-extrabold text-center text-yellow-800 mb-6">
+          🪔 Hare Krishna Devotee Login
         </h2>
 
         {/* Email Login */}
