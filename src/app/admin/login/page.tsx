@@ -33,8 +33,8 @@ export default function AdminLoginPage() {
       );
       const user = userCredential.user;
 
-      console.log("Logged in user:", user);
-      console.log(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
+      // console.log("Logged in user:", user);
+      // console.log(process.env.NEXT_PUBLIC_ADMIN_EMAIL);
 
       // Check if admin
       if (user.email === process.env.NEXT_PUBLIC_ADMIN_EMAIL) {

@@ -6,12 +6,14 @@ import { db } from "@/lib/firebase";
 
 interface Devotee {
   uid: string;
-  name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone?: string;
   dob?: string;
   provider?: string;
   createdAt?: Timestamp;
+  displayName?: string; // for backward compatibility
 }
 
 export default function AdminUserList() {
@@ -69,25 +71,32 @@ export default function AdminUserList() {
           </tr>
         </thead>
         <tbody>
-          {users.map((u, i) => (
-            <tr
-              key={u.uid}
-              className={`border-t border-yellow-100 ${
-                i % 2 === 0 ? "bg-yellow-50" : "bg-white"
-              }`}
-            >
-              <td className="py-2 px-3">{u.name || "-"}</td>
-              <td className="py-2 px-3">{u.email}</td>
-              <td className="py-2 px-3">{u.phone || "-"}</td>
-              <td className="py-2 px-3">{u.dob || "-"}</td>
-              <td className="py-2 px-3 capitalize">{u.provider || "-"}</td>
-              <td className="py-2 px-3">
-                {u.createdAt
-                  ? new Date(u.createdAt.toDate()).toLocaleDateString()
-                  : "-"}
-              </td>
-            </tr>
-          ))}
+          {users.map((u, i) => {
+            const fullName =
+              u.firstName || u.lastName || u.displayName
+                ? `${u.firstName || ""} ${u.lastName || u.displayName || ""}`.trim()
+                : "-";
+
+            return (
+              <tr
+                key={u.uid}
+                className={`border-t border-yellow-100 ${
+                  i % 2 === 0 ? "bg-yellow-50" : "bg-white"
+                }`}
+              >
+                <td className="py-2 px-3">{fullName}</td>
+                <td className="py-2 px-3">{u.email}</td>
+                <td className="py-2 px-3">{u.phone || "-"}</td>
+                <td className="py-2 px-3">{u.dob || "-"}</td>
+                <td className="py-2 px-3 capitalize">{u.provider || "-"}</td>
+                <td className="py-2 px-3">
+                  {u.createdAt
+                    ? new Date(u.createdAt.toDate()).toLocaleDateString()
+                    : "-"}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
