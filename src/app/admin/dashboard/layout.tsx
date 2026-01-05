@@ -19,63 +19,93 @@ export default function AdminDashboardLayout({
     router.push("/admin/login");
   };
 
+  const isActive = (path: string) =>
+    pathname === path || pathname.startsWith(path + "/");
+
   return (
     <AdminProtectedRoute>
       <div className="flex min-h-screen bg-yellow-50">
-        {/* Sidebar */}
+
+        {/* 🟡 SIDEBAR */}
         <aside className="w-64 bg-yellow-800 text-white flex flex-col">
           <div className="p-4 text-2xl font-bold border-b border-yellow-700 text-center">
             Admin Panel
           </div>
+
           <nav className="flex-1 mt-4 space-y-1">
+
+            {/* Dashboard */}
             <Link
               href="/admin/dashboard"
-              className={`block px-4 py-2 rounded-r-full ${
+              className={`block px-4 py-2 rounded-r-full transition ${
                 pathname === "/admin/dashboard"
                   ? "bg-yellow-600 font-semibold"
                   : "hover:bg-yellow-700"
               }`}
             >
-              Dashboard
+              📊 Dashboard
             </Link>
+
+            {/* Sadhana Report */}
+            <Link
+              href="/admin/dashboard/sadhana-report"
+              className={`block px-4 py-2 rounded-r-full transition ${
+                isActive("/admin/dashboard/sadhana-report")
+                  ? "bg-yellow-600 font-semibold"
+                  : "hover:bg-yellow-700"
+              }`}
+            >
+              🧘 Sadhana Report
+            </Link>
+
+            {/* Seva Board */}
             <Link
               href="/admin/dashboard/seva-board"
-              className={`block px-4 py-2 rounded-r-full ${
-                pathname.includes("/admin/dashboard/seva-board")
+              className={`block px-4 py-2 rounded-r-full transition ${
+                isActive("/admin/dashboard/seva-board")
                   ? "bg-yellow-600 font-semibold"
                   : "hover:bg-yellow-700"
               }`}
             >
-              Seva Board
+              🙏 Seva Board
             </Link>
+
+            {/* Users */}
             <Link
               href="/admin/dashboard/users"
-              className={`block px-4 py-2 rounded-r-full ${
-                pathname.includes("/admin/dashboard/users")
+              className={`block px-4 py-2 rounded-r-full transition ${
+                isActive("/admin/dashboard/users")
                   ? "bg-yellow-600 font-semibold"
                   : "hover:bg-yellow-700"
               }`}
             >
-              Users
+              👥 Users
             </Link>
           </nav>
+
+          {/* Logout */}
           <button
             onClick={handleLogout}
-            className="m-4 bg-red-600 hover:bg-red-700 py-2 rounded-lg font-semibold"
+            className="m-4 bg-red-600 hover:bg-red-700 py-2 rounded-lg font-semibold transition"
           >
             Logout
           </button>
         </aside>
 
-        {/* Main Content */}
+        {/* 🟢 MAIN CONTENT */}
         <main className="flex-1 p-6">
           {/* Top Bar */}
           <div className="flex justify-between items-center bg-white p-3 rounded-xl shadow mb-4 border border-yellow-300">
-            <h1 className="text-2xl font-bold text-yellow-800">Admin Dashboard</h1>
-            <div className="text-yellow-800 font-semibold">Welcome, Admin 👋</div>
+            <h1 className="text-2xl font-bold text-yellow-800">
+              Admin Dashboard
+            </h1>
+            <div className="text-yellow-800 font-semibold">
+              Welcome, Admin 👋
+            </div>
           </div>
 
-          <div>{children}</div>
+          {/* Page Content */}
+          {children}
         </main>
       </div>
     </AdminProtectedRoute>

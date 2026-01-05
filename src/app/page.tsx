@@ -42,7 +42,7 @@ export default function LoginPage() {
       router.push("/user/dashboard");
     } catch (err) {
       const error = err as FirebaseError;
-      setMessage("❌ " + (error.message || "Login failed"));
+      setMessage("❌ " + "Login failed");
     } finally {
       setLoading(false);
     }
@@ -134,10 +134,10 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="my-4 text-center text-gray-500 font-medium">OR</div>
+        {/* <div className="my-4 text-center text-gray-500 font-medium">OR</div> */}
 
         {/* Google Login */}
-        <button
+        {/* <button
           onClick={handleGoogleLogin}
           disabled={loading}
           className="w-full py-2.5 bg-white border border-gray-300 hover:bg-gray-100 rounded-lg font-medium transition flex items-center justify-center gap-3 shadow-sm"
@@ -154,8 +154,7 @@ export default function LoginPage() {
               <span>Login with Google</span>
             </>
           )}
-        </button>
-
+        </button> */}
         {/* Message */}
         {message && (
           <p className="text-center mt-4 text-yellow-800 font-medium">
