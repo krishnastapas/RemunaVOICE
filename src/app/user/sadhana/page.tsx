@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
+import BackHeader from "@/components/BackHeader";
 
 // ---------- TYPES ----------
 type YesNo = 0 | 1;
@@ -53,9 +54,8 @@ function YesNoToggle({
         type="button"
         disabled={disabled}
         onClick={() => onChange(0)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${
-          value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`px-3 py-1 rounded text-sm font-semibold ${value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
+          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         No
       </button>
@@ -64,9 +64,8 @@ function YesNoToggle({
         type="button"
         disabled={disabled}
         onClick={() => onChange(1)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${
-          value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
-        } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+        className={`px-3 py-1 rounded text-sm font-semibold ${value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
+          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         Yes
       </button>
@@ -181,100 +180,103 @@ export default function SadhanaPage() {
 
   // ---------- UI ----------
   return (
-    <div className="pt-[110px] pb-[90px] px-4 max-w-md mx-auto">
-      <h1 className="text-xl font-bold text-center mb-4">
-        🧘 Sadhana Card
-      </h1>
+    <div>
+      <BackHeader title="Sadhana" />
+      <div className="pt-[10px] pb-[90px] px-4 max-w-md mx-auto">
 
-      {/* DATE */}
-      <div className="relative mb-4">
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-          disabled={dateLoading}
-        />
+        <h1 className="text-xl font-bold text-center mb-4">
+          🧘 Sadhana Card
+        </h1>
 
-        {dateLoading && (
-          <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-sm font-medium">
-            Loading data…
-          </div>
-        )}
-      </div>
+        {/* DATE */}
+        <div className="relative mb-4">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            disabled={dateLoading}
+          />
 
-      {/* SOUL */}
-      <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-        🟡 Soul
-      </h2>
+          {dateLoading && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-sm font-medium">
+              Loading data…
+            </div>
+          )}
+        </div>
 
-      <Row label="Japa completed before 10 AM">
-        <YesNoToggle value={form.japaBefore10} onChange={(v) => update("japaBefore10", v)} />
-      </Row>
+        {/* SOUL */}
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">
+          🟡 Soul
+        </h2>
 
-      <Row label="Personal hearing > 1 hour per day">
-        <YesNoToggle value={form.personalHearing1hr} onChange={(v) => update("personalHearing1hr", v)} />
-      </Row>
+        <Row label="Japa completed before 10 AM">
+          <YesNoToggle value={form.japaBefore10} onChange={(v) => update("japaBefore10", v)} />
+        </Row>
 
-      <Row label="Read SP book > 1 hour">
-        <YesNoToggle value={form.spBookReading1hr} onChange={(v) => update("spBookReading1hr", v)} />
-      </Row>
+        <Row label="Personal hearing > 1 hour per day">
+          <YesNoToggle value={form.personalHearing1hr} onChange={(v) => update("personalHearing1hr", v)} />
+        </Row>
 
-      <Row label="Book reading class attended">
-        <YesNoToggle value={form.bookReadingAttended} onChange={(v) => update("bookReadingAttended", v)} />
-      </Row>
+        <Row label="Read SP book > 1 hour">
+          <YesNoToggle value={form.spBookReading1hr} onChange={(v) => update("spBookReading1hr", v)} />
+        </Row>
 
-      <Row label="Sloka learnt">
-        <YesNoToggle value={form.slokaLearnt} onChange={(v) => update("slokaLearnt", v)} />
-      </Row>
+        <Row label="Book reading class attended">
+          <YesNoToggle value={form.bookReadingAttended} onChange={(v) => update("bookReadingAttended", v)} />
+        </Row>
 
-      {/* BODY */}
-      <h2 className="text-lg font-semibold text-green-800 mt-6 mb-2">
-        🟢 Body
-      </h2>
+        <Row label="Sloka learnt">
+          <YesNoToggle value={form.slokaLearnt} onChange={(v) => update("slokaLearnt", v)} />
+        </Row>
 
-      <Row label="Day rest < 30 minutes">
-        <YesNoToggle value={form.dayRestBelow30} onChange={(v) => update("dayRestBelow30", v)} />
-      </Row>
+        {/* BODY */}
+        <h2 className="text-lg font-semibold text-green-800 mt-6 mb-2">
+          🟢 Body
+        </h2>
 
-      <Row
-        label={`Slept before time
+        <Row label="Day rest < 30 minutes">
+          <YesNoToggle value={form.dayRestBelow30} onChange={(v) => update("dayRestBelow30", v)} />
+        </Row>
+
+        <Row
+          label={`Slept before time
 (Working < 10:00 PM
 Student < 9:45 PM)`}
-      >
-        <YesNoToggle value={form.sleptBeforeTime} onChange={(v) => update("sleptBeforeTime", v)} />
-      </Row>
+        >
+          <YesNoToggle value={form.sleptBeforeTime} onChange={(v) => update("sleptBeforeTime", v)} />
+        </Row>
 
-      <Row
-        label={`Wake up before time
+        <Row
+          label={`Wake up before time
 (Working < 4:00 AM
 Student < 3:45 AM)`}
-      >
-        <YesNoToggle value={form.wakeUpBeforeTime} onChange={(v) => update("wakeUpBeforeTime", v)} />
-      </Row>
+        >
+          <YesNoToggle value={form.wakeUpBeforeTime} onChange={(v) => update("wakeUpBeforeTime", v)} />
+        </Row>
 
-      <Row
-        label={`Students (Study) /
+        <Row
+          label={`Students (Study) /
 Working (Preaching) > 1 hr`}
-      >
-        <YesNoToggle value={form.studyOrPreaching1hr} onChange={(v) => update("studyOrPreaching1hr", v)} />
-      </Row>
+        >
+          <YesNoToggle value={form.studyOrPreaching1hr} onChange={(v) => update("studyOrPreaching1hr", v)} />
+        </Row>
 
-      <button
-        onClick={saveSadhana}
-        disabled={disabled}
-        className={`w-full mt-6 py-2 rounded text-white ${
-          disabled ? "bg-gray-400" : "bg-yellow-700"
-        }`}
-      >
-        {saving ? "Saving..." : "Save Sadhana"}
-      </button>
+        <button
+          onClick={saveSadhana}
+          disabled={disabled}
+          className={`w-full mt-6 py-2 rounded text-white ${disabled ? "bg-gray-400" : "bg-yellow-700"
+            }`}
+        >
+          {saving ? "Saving..." : "Save Sadhana"}
+        </button>
 
-      {message && (
-        <p className="text-center mt-3 font-medium">
-          {message}
-        </p>
-      )}
+        {message && (
+          <p className="text-center mt-3 font-medium">
+            {message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

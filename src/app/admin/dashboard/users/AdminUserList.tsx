@@ -22,6 +22,11 @@ interface Devotee {
   provider?: string;
   createdAt?: Timestamp;
   displayName?: string;
+  features?: {
+    seva?: boolean;
+    sadhana?: boolean;
+    profile?: boolean;
+  };
 }
 
 type DevoteeDoc = Omit<Devotee, "uid">;
@@ -67,12 +72,11 @@ export default function AdminUserList() {
         lastName: editUser.lastName || "",
         phone: editUser.phone || "",
         dob: editUser.dob || "",
+        features: editUser.features || {},
       });
 
       setUsers((prev) =>
-        prev.map((u) =>
-          u.uid === editUser.uid ? editUser : u
-        )
+        prev.map((u) => (u.uid === editUser.uid ? editUser : u))
       );
       setEditUser(null);
     } catch (err) {
@@ -89,9 +93,7 @@ export default function AdminUserList() {
 
     try {
       await deleteDoc(doc(db, "devotees", deleteUser.uid));
-      setUsers((prev) =>
-        prev.filter((u) => u.uid !== deleteUser.uid)
-      );
+      setUsers((prev) => prev.filter((u) => u.uid !== deleteUser.uid));
       setDeleteUser(null);
     } catch (err) {
       console.error("Delete failed:", err);
@@ -130,10 +132,7 @@ export default function AdminUserList() {
           <tr>
             <th className="py-2 px-3">Name</th>
             <th className="py-2 px-3">Email</th>
-            <th className="py-2 px-3">Phone</th>
-            <th className="py-2 px-3">DOB</th>
-            <th className="py-2 px-3">Provider</th>
-            <th className="py-2 px-3">Registered</th>
+            <th className="py-2 px-3">Features</th>
             <th className="py-2 px-3 text-center">Actions</th>
           </tr>
         </thead>
@@ -155,19 +154,24 @@ export default function AdminUserList() {
               >
                 <td className="px-3 py-2">{fullName}</td>
                 <td className="px-3 py-2">{u.email}</td>
-                <td className="px-3 py-2">{u.phone || "-"}</td>
-                <td className="px-3 py-2">{u.dob || "-"}</td>
-                <td className="px-3 py-2 capitalize">
-                  {u.provider || "-"}
-                </td>
-                <td className="px-3 py-2">
-                  {u.createdAt
-                    ? u.createdAt.toDate().toLocaleDateString()
-                    : "-"}
+                <td className="px-3 py-2 text-xs">
+                  {Object.entries(u.features || {})
+                    .filter(([, v]) => v)
+                    .map(([k]) => k)
+                    .join(", ") || "-"}
                 </td>
                 <td className="px-3 py-2 text-center space-x-2">
                   <button
-                    onClick={() => setEditUser(u)}
+                    onClick={() =>
+                      setEditUser({
+                        ...u,
+                        features: {
+                          seva: u.features?.seva ?? false,
+                          sadhana: u.features?.sadhana ?? false,
+                          profile: u.features?.profile ?? false,
+                        },
+                      })
+                    }
                     className="text-blue-600 font-semibold"
                   >
                     Edit
@@ -189,7 +193,7 @@ export default function AdminUserList() {
       {editUser && (
         <Modal>
           <h3 className="font-bold text-lg mb-3">
-            Edit Devotee
+            Edit Devotee & Features
           </h3>
 
           <Input
@@ -199,6 +203,7 @@ export default function AdminUserList() {
               setEditUser({ ...editUser, firstName: v })
             }
           />
+
           <Input
             label="Last Name"
             value={editUser.lastName || ""}
@@ -206,21 +211,34 @@ export default function AdminUserList() {
               setEditUser({ ...editUser, lastName: v })
             }
           />
-          <Input
-            label="Phone"
-            value={editUser.phone || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, phone: v })
-            }
-          />
-          <Input
-            label="DOB"
-            type="date"
-            value={editUser.dob || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, dob: v })
-            }
-          />
+
+          <div className="mt-4 border-t pt-3">
+            <h4 className="font-semibold text-yellow-800 mb-2">
+              Enabled Features
+            </h4>
+
+            {["seva", "sadhana", "profile"].map((f) => (
+              <label
+                key={f}
+                className="flex items-center gap-2 mb-2 capitalize"
+              >
+                <input
+                  type="checkbox"
+                  checked={editUser.features?.[f as keyof typeof editUser.features] ?? false}
+                  onChange={(e) =>
+                    setEditUser({
+                      ...editUser,
+                      features: {
+                        ...editUser.features,
+                        [f]: e.target.checked,
+                      },
+                    })
+                  }
+                />
+                {f}
+              </label>
+            ))}
+          </div>
 
           <div className="flex gap-3 mt-4">
             <button
