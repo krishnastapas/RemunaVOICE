@@ -74,6 +74,7 @@ export default function RegisterPage() {
 
       const user = userCredential.user;
 
+      // register in Firestore
       await setDoc(doc(db, "devotees", user.uid), {
         uid: user.uid,
         firstName: form.firstName,
@@ -97,52 +98,52 @@ export default function RegisterPage() {
   };
 
   // 🌸 Google registration
-  const handleGoogleRegister = async () => {
-    setLoading(true);
-    setMessage("");
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const userRef = doc(db, "devotees", user.uid);
-      const snap = await getDoc(userRef);
+  // const handleGoogleRegister = async () => {
+  //   setLoading(true);
+  //   setMessage("");
+  //   try {
+  //     const result = await signInWithPopup(auth, googleProvider);
+  //     const user = result.user;
+  //     const userRef = doc(db, "devotees", user.uid);
+  //     const snap = await getDoc(userRef);
 
-      // Split displayName into first/middle/last
-      const nameParts = (user.displayName || "").trim().split(" ");
-      const firstName = nameParts[0] || "";
-      const middleName =
-        nameParts.length === 3
-          ? nameParts[1]
-          : nameParts.length > 3
-          ? nameParts.slice(1, -1).join(" ")
-          : "";
-      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+  //     // Split displayName into first/middle/last
+  //     const nameParts = (user.displayName || "").trim().split(" ");
+  //     const firstName = nameParts[0] || "";
+  //     const middleName =
+  //       nameParts.length === 3
+  //         ? nameParts[1]
+  //         : nameParts.length > 3
+  //         ? nameParts.slice(1, -1).join(" ")
+  //         : "";
+  //     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
 
-      if (!snap.exists()) {
-        const dob = prompt("Please enter your Date of Birth (YYYY-MM-DD):") || "";
+  //     if (!snap.exists()) {
+  //       const dob = prompt("Please enter your Date of Birth (YYYY-MM-DD):") || "";
 
-        await setDoc(userRef, {
-          uid: user.uid,
-          firstName,
-          middleName,
-          lastName,
-          email: user.email,
-          photoURL: user.photoURL,
-          dob,
-          provider: "google",
-          createdAt: new Date(),
-        });
-      }
+  //       await setDoc(userRef, {
+  //         uid: user.uid,
+  //         firstName,
+  //         middleName,
+  //         lastName,
+  //         email: user.email,
+  //         photoURL: user.photoURL,
+  //         dob,
+  //         provider: "google",
+  //         createdAt: new Date(),
+  //       });
+  //     }
 
-      setMessage("✅ Registered/Login successful!");
-      router.push("/user/dashboard");
-    } catch (error) {
-      const err = error as FirebaseError;
-      console.error("Google register error:", err);
-      setMessage("❌ " + (err.message || "Google registration failed."));
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setMessage("✅ Registered/Login successful!");
+  //     router.push("/user/dashboard");
+  //   } catch (error) {
+  //     const err = error as FirebaseError;
+  //     console.error("Google register error:", err);
+  //     setMessage("❌ " + (err.message || "Google registration failed."));
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-yellow-50 px-4 sm:px-6 lg:px-8">
@@ -233,18 +234,18 @@ export default function RegisterPage() {
           </button>
         </form>
 
-        <div className="my-4 text-center text-gray-600 font-semibold text-sm sm:text-base">
+        {/* <div className="my-4 text-center text-gray-600 font-semibold text-sm sm:text-base">
           OR
-        </div>
+        </div> */}
 
-        <button
+        {/* <button
           onClick={handleGoogleRegister}
           disabled={loading}
           className="w-full flex items-center justify-center gap-2 py-2 bg-white border border-gray-300 rounded-lg font-semibold transition hover:bg-gray-50 text-sm sm:text-base"
         >
           <FcGoogle className="text-xl sm:text-2xl" />
           {loading ? "Connecting..." : "Register with Google"}
-        </button>
+        </button> */}
 
         <p className="text-center mt-6 text-gray-700 text-sm sm:text-base">
           Already have an account?{" "}
