@@ -24,6 +24,8 @@ interface Devotee {
   displayName?: string;
 }
 
+type DevoteeDoc = Omit<Devotee, "uid">;
+
 /* ---------------- PAGE ---------------- */
 export default function AdminUserList() {
   const [users, setUsers] = useState<Devotee[]>([]);
@@ -39,7 +41,10 @@ export default function AdminUserList() {
       try {
         const snap = await getDocs(collection(db, "devotees"));
         setUsers(
-          snap.docs.map((d) => ({ uid: d.id, ...(d.data() as any) }))
+          snap.docs.map((d) => ({
+            uid: d.id,
+            ...(d.data() as DevoteeDoc),
+          }))
         );
       } catch (err) {
         console.error("Error fetching devotees:", err);
@@ -65,7 +70,9 @@ export default function AdminUserList() {
       });
 
       setUsers((prev) =>
-        prev.map((u) => (u.uid === editUser.uid ? editUser : u))
+        prev.map((u) =>
+          u.uid === editUser.uid ? editUser : u
+        )
       );
       setEditUser(null);
     } catch (err) {
@@ -82,7 +89,9 @@ export default function AdminUserList() {
 
     try {
       await deleteDoc(doc(db, "devotees", deleteUser.uid));
-      setUsers((prev) => prev.filter((u) => u.uid !== deleteUser.uid));
+      setUsers((prev) =>
+        prev.filter((u) => u.uid !== deleteUser.uid)
+      );
       setDeleteUser(null);
     } catch (err) {
       console.error("Delete failed:", err);
@@ -96,7 +105,9 @@ export default function AdminUserList() {
     return (
       <div className="flex flex-col items-center justify-center py-10">
         <div className="h-8 w-8 border-4 border-yellow-700 border-t-transparent rounded-full animate-spin mb-2"></div>
-        <p className="text-yellow-700 font-medium">Loading devotees...</p>
+        <p className="text-yellow-700 font-medium">
+          Loading devotees...
+        </p>
       </div>
     );
 
@@ -130,7 +141,9 @@ export default function AdminUserList() {
           {users.map((u, i) => {
             const fullName =
               u.firstName || u.lastName || u.displayName
-                ? `${u.firstName || ""} ${u.lastName || u.displayName || ""}`.trim()
+                ? `${u.firstName || ""} ${
+                    u.lastName || u.displayName || ""
+                  }`.trim()
                 : "-";
 
             return (
@@ -144,10 +157,12 @@ export default function AdminUserList() {
                 <td className="px-3 py-2">{u.email}</td>
                 <td className="px-3 py-2">{u.phone || "-"}</td>
                 <td className="px-3 py-2">{u.dob || "-"}</td>
-                <td className="px-3 py-2 capitalize">{u.provider || "-"}</td>
+                <td className="px-3 py-2 capitalize">
+                  {u.provider || "-"}
+                </td>
                 <td className="px-3 py-2">
                   {u.createdAt
-                    ? new Date(u.createdAt.toDate()).toLocaleDateString()
+                    ? u.createdAt.toDate().toLocaleDateString()
                     : "-"}
                 </td>
                 <td className="px-3 py-2 text-center space-x-2">
@@ -173,7 +188,9 @@ export default function AdminUserList() {
       {/* -------- EDIT MODAL -------- */}
       {editUser && (
         <Modal>
-          <h3 className="font-bold text-lg mb-3">Edit Devotee</h3>
+          <h3 className="font-bold text-lg mb-3">
+            Edit Devotee
+          </h3>
 
           <Input
             label="First Name"
@@ -231,7 +248,10 @@ export default function AdminUserList() {
           </h3>
           <p>
             Are you sure you want to delete{" "}
-            <strong>{deleteUser.firstName || deleteUser.email}</strong>?
+            <strong>
+              {deleteUser.firstName || deleteUser.email}
+            </strong>
+            ?
           </p>
 
           <div className="flex gap-3 mt-4">
@@ -279,7 +299,9 @@ function Input({
 }) {
   return (
     <div className="mb-3">
-      <label className="block text-sm mb-1">{label}</label>
+      <label className="block text-sm mb-1">
+        {label}
+      </label>
       <input
         type={type}
         value={value}

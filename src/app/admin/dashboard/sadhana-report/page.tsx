@@ -10,8 +10,6 @@ import {
 import { db } from "@/lib/firebase";
 
 import {
-  BarChart,
-  Bar,
   LineChart,
   Line,
   XAxis,
@@ -34,7 +32,7 @@ interface Devotee {
 interface SadhanaRecord {
   userId: string;
   date: string;
-  [key: string]: any;
+  [key: string]: 0 | 1 | string;
 }
 
 /* ---------------- CONSTANTS ---------------- */
@@ -43,7 +41,7 @@ const DAILY_MAX_SCORE = 10;
 /* ---------------- UTILS ---------------- */
 const calculateDailyScore = (record: SadhanaRecord) =>
   Object.entries(record)
-    .filter(([k, v]) => v === 1)
+    .filter(([, v]) => v === 1)
     .length;
 
 const calculateAveragePercent = (
@@ -59,7 +57,7 @@ const calculateAveragePercent = (
 const calculateStreak = (dates: string[]) => {
   const sorted = [...dates].sort().reverse();
   let streak = 0;
-  let current = new Date();
+  const current = new Date();
 
   for (const d of sorted) {
     const iso = current.toISOString().split("T")[0];
@@ -124,7 +122,9 @@ export default function AdminSadhanaReport() {
       );
 
       const snap = await getDocs(q);
-      setRecords(snap.docs.map((d) => d.data() as SadhanaRecord));
+      setRecords(
+        snap.docs.map((d) => d.data() as SadhanaRecord)
+      );
       setLoading(false);
     };
     loadData();
@@ -147,7 +147,9 @@ export default function AdminSadhanaReport() {
     );
 
   const streak = (uid: string) =>
-    calculateStreak(userRecords(uid).map((r) => r.date));
+    calculateStreak(
+      userRecords(uid).map((r) => r.date)
+    );
 
   /* -------- EXPORT -------- */
   const exportExcel = () => {
@@ -191,7 +193,9 @@ export default function AdminSadhanaReport() {
       <div className="flex gap-4 mb-4">
         <select
           value={month}
-          onChange={(e) => setMonth(+e.target.value)}
+          onChange={(e) =>
+            setMonth(Number(e.target.value))
+          }
           className="border px-3 py-2 rounded"
         >
           {Array.from({ length: 12 }).map((_, i) => (
@@ -205,7 +209,9 @@ export default function AdminSadhanaReport() {
 
         <select
           value={year}
-          onChange={(e) => setYear(+e.target.value)}
+          onChange={(e) =>
+            setYear(Number(e.target.value))
+          }
           className="border px-3 py-2 rounded"
         >
           {[year - 1, year, year + 1].map((y) => (
@@ -247,8 +253,12 @@ export default function AdminSadhanaReport() {
         <tbody>
           {users.map((u) => (
             <tr key={u.uid}>
-              <td className="border p-2">{u.firstName}</td>
-              <td className="border p-2 text-xs">{u.email}</td>
+              <td className="border p-2">
+                {u.firstName}
+              </td>
+              <td className="border p-2 text-xs">
+                {u.email}
+              </td>
               <td className="border p-2 text-center">
                 {totalScore(u.uid)}
               </td>
@@ -262,7 +272,9 @@ export default function AdminSadhanaReport() {
                 <button
                   onClick={() => {
                     setDetailUser(u);
-                    setDetailRecords(userRecords(u.uid));
+                    setDetailRecords(
+                      userRecords(u.uid)
+                    );
                   }}
                   className="text-blue-600"
                 >
@@ -279,7 +291,8 @@ export default function AdminSadhanaReport() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded w-[500px] max-h-[80vh] overflow-y-auto">
             <h2 className="font-bold mb-3">
-              {detailUser.firstName} – Monthly Details
+              {detailUser.firstName} – Monthly
+              Details
             </h2>
 
             <ResponsiveContainer width="100%" height={250}>
@@ -301,7 +314,10 @@ export default function AdminSadhanaReport() {
             </ResponsiveContainer>
 
             {detailRecords.map((r) => (
-              <div key={r.date} className="border p-2 mt-2">
+              <div
+                key={r.date}
+                className="border p-2 mt-2"
+              >
                 <strong>{r.date}</strong> – Score{" "}
                 {calculateDailyScore(r)}
               </div>
