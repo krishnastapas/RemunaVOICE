@@ -26,6 +26,7 @@ interface Devotee {
     seva?: boolean;
     sadhana?: boolean;
     profile?: boolean;
+    sevaAlot?: boolean;
   };
 }
 
@@ -169,6 +170,7 @@ export default function AdminUserList() {
                           seva: u.features?.seva ?? false,
                           sadhana: u.features?.sadhana ?? false,
                           profile: u.features?.profile ?? false,
+                          sevaAlot: u.features?.sevaAlot ?? false,
                         },
                       })
                     }
@@ -217,7 +219,7 @@ export default function AdminUserList() {
               Enabled Features
             </h4>
 
-            {["seva", "sadhana", "profile"].map((f) => (
+            {["seva", "sadhana", "profile", "sevaAlot"].map((f) => (
               <label
                 key={f}
                 className="flex items-center gap-2 mb-2 capitalize"

@@ -24,6 +24,7 @@ interface UserData {
     seva?: boolean;
     sadhana?: boolean;
     profile?: boolean;
+    sevaAlot?: boolean;
   }
 }
 

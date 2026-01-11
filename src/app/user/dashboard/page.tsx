@@ -88,6 +88,17 @@ export default function UserDashboard() {
             <span className="font-semibold">Sadhana</span>
           </button>
         )}
+
+          {features.sevaAlot && (
+          <button
+            onClick={() => router.push("/user/seva-board-admin")}
+            className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center"
+          >
+            <GiMeditation className="text-3xl text-yellow-700 mb-2" />
+            <span className="font-semibold">Seva Board Admin</span>
+          </button>
+        )}
+
       </div>
 
       {!features.seva && !features.sadhana && (
