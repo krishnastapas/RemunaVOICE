@@ -1,50 +1,93 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import BackHeader from "@/components/BackHeader";
 import MySadhanaAnalysis from "./MySadhanaAnalysis";
 import SadhanaComparison from "./SadhanaComparison";
 
+/* ---------- TYPES ---------- */
+interface SadhanaRecord {
+  userId: string;
+  date: string;
+
+  // Soul
+  japaBefore10?: number;
+  personalHearing1hr?: number;
+  spBookReading1hr?: number;
+  bookReadingAttended?: number;
+  slokaLearnt?: number;
+
+  // Body
+  dayRestBelow30?: number;
+  sleptBeforeTime?: number;
+  wakeUpBeforeTime?: number;
+  studyOrPreaching1hr?: number;
+}
+
+interface RankingItem {
+  userId: string;
+  name: string;
+  score: number;
+}
+
 export default function SadhanaAnalysisPage() {
   const { user } = useAuth();
+
   const [tab, setTab] = useState<"mine" | "compare">("mine");
-  const [records, setRecords] = useState<any[]>([]);
-  const [ranking, setRanking] = useState<any[]>([]);
+  const [records, setRecords] = useState<SadhanaRecord[]>([]);
+  const [ranking, setRanking] = useState<RankingItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
     const load = async () => {
-      const snap = await getDocs(collection(db, "sadhana_cards"));
-      const data = snap.docs.map((d) => d.data());
-      setRecords(data.filter((r) => r.userId === user.uid));
+      setLoading(true);
 
-      const map: Record<string, number> = {};
-      data.forEach((r) => {
-        map[r.userId] = (map[r.userId] || 0) + 1;
+      /* -------- LOAD SADHANA -------- */
+      const snap = await getDocs(collection(db, "sadhana_cards"));
+      const allRecords = snap.docs.map(
+        (d) => d.data() as SadhanaRecord
+      );
+
+      const myRecords = allRecords.filter(
+        (r) => r.userId === user.uid
+      );
+      setRecords(myRecords);
+
+      /* -------- CALCULATE RANKING -------- */
+      const scoreMap: Record<string, number> = {};
+
+      allRecords.forEach((r) => {
+        scoreMap[r.userId] = (scoreMap[r.userId] || 0) + 1;
       });
 
-      const users = await getDocs(collection(db, "devotees"));
-      const ranks = users.docs.map((u) => ({
+      const usersSnap = await getDocs(collection(db, "devotees"));
+      const ranks: RankingItem[] = usersSnap.docs.map((u) => ({
         userId: u.id,
         name: u.data().firstName || "Devotee",
-        score: map[u.id] || 0,
+        score: scoreMap[u.id] || 0,
       }));
 
       ranks.sort((a, b) => b.score - a.score);
       setRanking(ranks);
+
       setLoading(false);
     };
 
     load();
   }, [user]);
 
-  if (!user) return <div className="pt-32 text-center">Login required</div>;
-  if (loading) return <div className="pt-32 text-center">Loading…</div>;
+  if (!user) {
+    return <div className="pt-32 text-center">Login required</div>;
+  }
+
+  if (loading) {
+    return <div className="pt-32 text-center">Loading…</div>;
+  }
 
   return (
     <div>
@@ -62,7 +105,10 @@ export default function SadhanaAnalysisPage() {
         >
           My Sadhana
         </button>
-        {/* <button
+
+        {/* Uncomment when needed */}
+        {/*
+        <button
           onClick={() => setTab("compare")}
           className={`flex-1 py-2 rounded font-semibold ${
             tab === "compare"
@@ -71,7 +117,8 @@ export default function SadhanaAnalysisPage() {
           }`}
         >
           Comparison
-        </button> */}
+        </button>
+        */}
       </div>
 
       <div className="px-4 pb-24">

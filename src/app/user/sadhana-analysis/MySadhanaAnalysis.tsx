@@ -14,9 +14,29 @@ import SadhanaDayDetailsModal from "./SadhanaDayDetailsModal";
 
 /* ---------- TYPES ---------- */
 interface SadhanaRecord {
-  date: string;
   userId: string;
-  [key: string]: any;
+  date: string;
+
+  // Soul
+  japaBefore10?: number;
+  personalHearing1hr?: number;
+  spBookReading1hr?: number;
+  bookReadingAttended?: number;
+  slokaLearnt?: number;
+
+  // Body
+  dayRestBelow30?: number;
+  sleptBeforeTime?: number;
+  wakeUpBeforeTime?: number;
+  studyOrPreaching1hr?: number;
+}
+
+interface WeeklyRow {
+  date: string;
+  soul: number;
+  body: number;
+  total: number;
+  raw: SadhanaRecord | null;
 }
 
 interface Props {
@@ -24,7 +44,7 @@ interface Props {
 }
 
 /* ---------- UTILS ---------- */
-const soulKeys = [
+const soulKeys: (keyof SadhanaRecord)[] = [
   "japaBefore10",
   "personalHearing1hr",
   "spBookReading1hr",
@@ -32,14 +52,17 @@ const soulKeys = [
   "slokaLearnt",
 ];
 
-const bodyKeys = [
+const bodyKeys: (keyof SadhanaRecord)[] = [
   "dayRestBelow30",
   "sleptBeforeTime",
   "wakeUpBeforeTime",
   "studyOrPreaching1hr",
 ];
 
-const calcScore = (r: SadhanaRecord, keys: string[]) =>
+const calcScore = (
+  r: SadhanaRecord,
+  keys: (keyof SadhanaRecord)[]
+) =>
   keys.reduce((s, k) => s + (r[k] === 1 ? 1 : 0), 0);
 
 // 🇮🇳 Indian date format → "2 Jan"
@@ -52,9 +75,10 @@ const formatDateIN = (iso: string) =>
 /* ---------- COMPONENT ---------- */
 export default function MySadhanaAnalysis({ records }: Props) {
   const [weekOffset, setWeekOffset] = useState(0);
-  const [selectedDay, setSelectedDay] = useState<SadhanaRecord | null>(null);
+  const [selectedDay, setSelectedDay] =
+    useState<SadhanaRecord | null>(null);
 
-  const weeklyData = useMemo(() => {
+  const weeklyData: WeeklyRow[] = useMemo(() => {
     const now = new Date();
     now.setDate(now.getDate() - weekOffset * 7);
 
@@ -66,13 +90,14 @@ export default function MySadhanaAnalysis({ records }: Props) {
     }
 
     return week.map((d) => {
-      const r = records.find((x) => x.date === d);
+      const r = records.find((x) => x.date === d) || null;
+
       return {
         date: d,
         soul: r ? calcScore(r, soulKeys) : 0,
         body: r ? calcScore(r, bodyKeys) : 0,
         total: r ? calcScore(r, [...soulKeys, ...bodyKeys]) : 0,
-        raw: r || null,
+        raw: r,
       };
     });
   }, [records, weekOffset]);
@@ -96,7 +121,9 @@ export default function MySadhanaAnalysis({ records }: Props) {
         </button>
 
         <div className="text-center">
-          <p className="font-semibold text-yellow-800">Weekly Analysis</p>
+          <p className="font-semibold text-yellow-800">
+            Weekly Analysis
+          </p>
           <p className="text-xs text-gray-600">{weekRange}</p>
         </div>
 
