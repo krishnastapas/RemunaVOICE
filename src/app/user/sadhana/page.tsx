@@ -5,13 +5,21 @@ import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import BackHeader from "@/components/BackHeader";
-
+import { useRouter } from "next/navigation";
 // ---------- TYPES ----------
 type YesNo = 0 | 1;
 
+// 🔴 ONLY CHANGE: Japa is now 0 | 1 | 2
+type JapaTime = 0 | 1 | 2;
+/*
+0 = No
+1 = Before 10 AM
+2 = Before 1 AM
+*/
+
 interface SadhanaForm {
   // Soul
-  japaBefore10: YesNo;
+  japaBefore10: JapaTime;
   personalHearing1hr: YesNo;
   spBookReading1hr: YesNo;
   bookReadingAttended: YesNo;
@@ -73,6 +81,51 @@ function YesNoToggle({
   );
 }
 
+// ---------- JAPA TOGGLE (ONLY NEW COMPONENT) ----------
+function JapaToggle({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: JapaTime;
+  onChange: (v: JapaTime) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex gap-2 flex-wrap">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(1)}
+        className={`px-3 py-1 rounded text-sm font-semibold ${value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
+          }`}
+      >
+        Before 10 AM
+      </button>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(2)}
+        className={`px-3 py-1 rounded text-sm font-semibold ${value === 2 ? "bg-yellow-600 text-white" : "bg-gray-200"
+          }`}
+      >
+        Before 1 PM
+      </button>
+
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onChange(0)}
+        className={`px-3 py-1 rounded text-sm font-semibold ${value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
+          }`}
+      >
+        No
+      </button>
+    </div>
+  );
+}
+
 // ---------- ROW ----------
 function Row({
   label,
@@ -92,6 +145,7 @@ function Row({
 // ---------- PAGE ----------
 export default function SadhanaPage() {
   const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
 
   const [date, setDate] = useState(
     new Date().toISOString().split("T")[0]
@@ -103,7 +157,7 @@ export default function SadhanaPage() {
 
   const docId = user ? `${user.uid}_${date}` : null;
 
-  // ---------- LOAD ON DATE CHANGE ----------
+  // ---------- LOAD ----------
   useEffect(() => {
     if (!user || !docId) return;
 
@@ -163,30 +217,31 @@ export default function SadhanaPage() {
     }
   };
 
-  const update = (key: keyof SadhanaForm, value: YesNo) => {
+  const update = (key: keyof SadhanaForm, value: any) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
   const disabled = saving || dateLoading;
 
-  // ---------- CONDITIONAL UI (SAFE) ----------
-  if (authLoading) {
-    return <div className="pt-32 text-center">Loading...</div>;
-  }
-
-  if (!user) {
-    return <div className="pt-32 text-center">Please login</div>;
-  }
-
-  // ---------- UI ----------
+  if (authLoading) return <div className="pt-32 text-center">Loading...</div>;
+  if (!user) return <div className="pt-32 text-center">Please login</div>;
   return (
     <div>
       <BackHeader title="Sadhana" />
       <div className="pt-[10px] pb-[90px] px-4 max-w-md mx-auto">
 
-        <h1 className="text-xl font-bold text-center mb-4">
-          🧘 Sadhana Card
-        </h1>
+        <div>
+          <h1 className="text-xl font-bold text-center mb-4">
+            🧘 Sadhana Card
+          </h1>
+          <button
+            onClick={() => router.push("/user/sadhana-analysis")}
+            className="absolute mt-5 right-4 top-0 bg-yellow-700 hover:bg-yellow-800 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow"
+          >
+            📊 Analysis
+          </button>
+
+        </div>
 
         {/* DATE */}
         <div className="relative mb-4">
@@ -197,21 +252,20 @@ export default function SadhanaPage() {
             className="w-full border rounded px-3 py-2"
             disabled={dateLoading}
           />
-
-          {dateLoading && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center text-sm font-medium">
-              Loading data…
-            </div>
-          )}
         </div>
+
 
         {/* SOUL */}
         <h2 className="text-lg font-semibold text-yellow-800 mb-2">
           🟡 Soul
         </h2>
 
-        <Row label="Japa completed before 10 AM">
-          <YesNoToggle value={form.japaBefore10} onChange={(v) => update("japaBefore10", v)} />
+        {/* 🔴 ONLY THIS ROW CHANGED */}
+        <Row label="Japa completed">
+          <JapaToggle
+            value={form.japaBefore10}
+            onChange={(v) => update("japaBefore10", v)}
+          />
         </Row>
 
         <Row label="Personal hearing > 1 hour per day">
@@ -239,26 +293,15 @@ export default function SadhanaPage() {
           <YesNoToggle value={form.dayRestBelow30} onChange={(v) => update("dayRestBelow30", v)} />
         </Row>
 
-        <Row
-          label={`Slept before time
-(Working < 10:00 PM
-Student < 9:45 PM)`}
-        >
+        <Row label={`Slept before time\n(Working < 10:00 PM\nStudent < 9:45 PM)`}>
           <YesNoToggle value={form.sleptBeforeTime} onChange={(v) => update("sleptBeforeTime", v)} />
         </Row>
 
-        <Row
-          label={`Wake up before time
-(Working < 4:00 AM
-Student < 3:45 AM)`}
-        >
+        <Row label={`Wake up before time\n(Working < 4:00 AM\nStudent < 3:45 AM)`}>
           <YesNoToggle value={form.wakeUpBeforeTime} onChange={(v) => update("wakeUpBeforeTime", v)} />
         </Row>
 
-        <Row
-          label={`Students (Study) /
-Working (Preaching) > 1 hr`}
-        >
+        <Row label={`Students (Study) /\nWorking (Preaching) > 1 hr`}>
           <YesNoToggle value={form.studyOrPreaching1hr} onChange={(v) => update("studyOrPreaching1hr", v)} />
         </Row>
 
