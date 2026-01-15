@@ -6,15 +6,16 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import BackHeader from "@/components/BackHeader";
 import { useRouter } from "next/navigation";
-// ---------- TYPES ----------
+
+/* ---------- TYPES ---------- */
 type YesNo = 0 | 1;
 
-// 🔴 ONLY CHANGE: Japa is now 0 | 1 | 2
+// Japa timing
 type JapaTime = 0 | 1 | 2;
 /*
 0 = No
 1 = Before 10 AM
-2 = Before 1 AM
+2 = Before 1 PM
 */
 
 interface SadhanaForm {
@@ -32,7 +33,7 @@ interface SadhanaForm {
   studyOrPreaching1hr: YesNo;
 }
 
-// ---------- DEFAULT ----------
+/* ---------- DEFAULT ---------- */
 const defaultForm: SadhanaForm = {
   japaBefore10: 0,
   personalHearing1hr: 0,
@@ -46,7 +47,7 @@ const defaultForm: SadhanaForm = {
   studyOrPreaching1hr: 0,
 };
 
-// ---------- YES / NO ----------
+/* ---------- YES / NO ---------- */
 function YesNoToggle({
   value,
   onChange,
@@ -63,7 +64,7 @@ function YesNoToggle({
         disabled={disabled}
         onClick={() => onChange(0)}
         className={`px-3 py-1 rounded text-sm font-semibold ${value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          }`}
       >
         No
       </button>
@@ -73,7 +74,7 @@ function YesNoToggle({
         disabled={disabled}
         onClick={() => onChange(1)}
         className={`px-3 py-1 rounded text-sm font-semibold ${value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
-          } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+          }`}
       >
         Yes
       </button>
@@ -81,7 +82,7 @@ function YesNoToggle({
   );
 }
 
-// ---------- JAPA TOGGLE (ONLY NEW COMPONENT) ----------
+/* ---------- JAPA TOGGLE ---------- */
 function JapaToggle({
   value,
   onChange,
@@ -126,7 +127,7 @@ function JapaToggle({
   );
 }
 
-// ---------- ROW ----------
+/* ---------- ROW ---------- */
 function Row({
   label,
   children,
@@ -142,7 +143,7 @@ function Row({
   );
 }
 
-// ---------- PAGE ----------
+/* ---------- PAGE ---------- */
 export default function SadhanaPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -157,7 +158,7 @@ export default function SadhanaPage() {
 
   const docId = user ? `${user.uid}_${date}` : null;
 
-  // ---------- LOAD ----------
+  /* ---------- LOAD ---------- */
   useEffect(() => {
     if (!user || !docId) return;
 
@@ -165,19 +166,17 @@ export default function SadhanaPage() {
 
     const loadData = async () => {
       setDateLoading(true);
-      setMessage("");
-
       try {
         const ref = doc(db, "sadhana_cards", docId);
         const snap = await getDoc(ref);
 
         if (!active) return;
 
-        if (snap.exists()) {
-          setForm(snap.data() as SadhanaForm);
-        } else {
-          setForm(defaultForm);
-        }
+        setForm(
+          snap.exists()
+            ? (snap.data() as SadhanaForm)
+            : defaultForm
+        );
       } finally {
         if (active) setDateLoading(false);
       }
@@ -189,7 +188,7 @@ export default function SadhanaPage() {
     };
   }, [docId, user]);
 
-  // ---------- SAVE ----------
+  /* ---------- SAVE ---------- */
   const saveSadhana = async () => {
     if (!user || !docId) return;
 
@@ -208,7 +207,6 @@ export default function SadhanaPage() {
         },
         { merge: true }
       );
-
       setMessage("✅ Sadhana saved successfully");
     } catch {
       setMessage("❌ Failed to save sadhana");
@@ -217,50 +215,50 @@ export default function SadhanaPage() {
     }
   };
 
-  const update = (key: keyof SadhanaForm, value: any) => {
+  /* ✅ FIXED TYPE (NO any) */
+  const update = (
+    key: keyof SadhanaForm,
+    value: YesNo | JapaTime
+  ) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const disabled = saving || dateLoading;
-
-  if (authLoading) return <div className="pt-32 text-center">Loading...</div>;
+  if (authLoading) return <div className="pt-32 text-center">Loading…</div>;
   if (!user) return <div className="pt-32 text-center">Please login</div>;
+
   return (
     <div>
       <BackHeader title="Sadhana" />
-      <div className="pt-[10px] pb-[90px] px-4 max-w-md mx-auto">
+
+      <div className="pt-[10px] pb-[90px] px-4 max-w-md mx-auto relative">
 
         <div>
           <h1 className="text-xl font-bold text-center mb-4">
             🧘 Sadhana Card
           </h1>
+
+          {/* ANALYSIS BUTTON */}
           <button
             onClick={() => router.push("/user/sadhana-analysis")}
-            className="absolute mt-5 right-4 top-0 bg-yellow-700 hover:bg-yellow-800 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow"
+            className="absolute right-0 top-0 bg-yellow-700 hover:bg-yellow-800 text-white px-4 py-1.5 rounded-full text-sm font-semibold shadow"
           >
             📊 Analysis
           </button>
-
         </div>
-
         {/* DATE */}
-        <div className="relative mb-4">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-            disabled={dateLoading}
-          />
-        </div>
-
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+          className="w-full border rounded px-3 py-2 mb-4"
+          disabled={dateLoading}
+        />
 
         {/* SOUL */}
         <h2 className="text-lg font-semibold text-yellow-800 mb-2">
           🟡 Soul
         </h2>
 
-        {/* 🔴 ONLY THIS ROW CHANGED */}
         <Row label="Japa completed">
           <JapaToggle
             value={form.japaBefore10}
@@ -269,19 +267,39 @@ export default function SadhanaPage() {
         </Row>
 
         <Row label="Personal hearing > 1 hour per day">
-          <YesNoToggle value={form.personalHearing1hr} onChange={(v) => update("personalHearing1hr", v)} />
+          <YesNoToggle
+            value={form.personalHearing1hr}
+            onChange={(v) =>
+              update("personalHearing1hr", v)
+            }
+          />
         </Row>
 
         <Row label="Read SP book > 1 hour">
-          <YesNoToggle value={form.spBookReading1hr} onChange={(v) => update("spBookReading1hr", v)} />
+          <YesNoToggle
+            value={form.spBookReading1hr}
+            onChange={(v) =>
+              update("spBookReading1hr", v)
+            }
+          />
         </Row>
 
         <Row label="Book reading class attended">
-          <YesNoToggle value={form.bookReadingAttended} onChange={(v) => update("bookReadingAttended", v)} />
+          <YesNoToggle
+            value={form.bookReadingAttended}
+            onChange={(v) =>
+              update("bookReadingAttended", v)
+            }
+          />
         </Row>
 
         <Row label="Sloka learnt">
-          <YesNoToggle value={form.slokaLearnt} onChange={(v) => update("slokaLearnt", v)} />
+          <YesNoToggle
+            value={form.slokaLearnt}
+            onChange={(v) =>
+              update("slokaLearnt", v)
+            }
+          />
         </Row>
 
         {/* BODY */}
@@ -290,28 +308,47 @@ export default function SadhanaPage() {
         </h2>
 
         <Row label="Day rest < 30 minutes">
-          <YesNoToggle value={form.dayRestBelow30} onChange={(v) => update("dayRestBelow30", v)} />
+          <YesNoToggle
+            value={form.dayRestBelow30}
+            onChange={(v) =>
+              update("dayRestBelow30", v)
+            }
+          />
         </Row>
 
         <Row label={`Slept before time\n(Working < 10:00 PM\nStudent < 9:45 PM)`}>
-          <YesNoToggle value={form.sleptBeforeTime} onChange={(v) => update("sleptBeforeTime", v)} />
+          <YesNoToggle
+            value={form.sleptBeforeTime}
+            onChange={(v) =>
+              update("sleptBeforeTime", v)
+            }
+          />
         </Row>
 
         <Row label={`Wake up before time\n(Working < 4:00 AM\nStudent < 3:45 AM)`}>
-          <YesNoToggle value={form.wakeUpBeforeTime} onChange={(v) => update("wakeUpBeforeTime", v)} />
+          <YesNoToggle
+            value={form.wakeUpBeforeTime}
+            onChange={(v) =>
+              update("wakeUpBeforeTime", v)
+            }
+          />
         </Row>
 
         <Row label={`Students (Study) /\nWorking (Preaching) > 1 hr`}>
-          <YesNoToggle value={form.studyOrPreaching1hr} onChange={(v) => update("studyOrPreaching1hr", v)} />
+          <YesNoToggle
+            value={form.studyOrPreaching1hr}
+            onChange={(v) =>
+              update("studyOrPreaching1hr", v)
+            }
+          />
         </Row>
 
         <button
           onClick={saveSadhana}
-          disabled={disabled}
-          className={`w-full mt-6 py-2 rounded text-white ${disabled ? "bg-gray-400" : "bg-yellow-700"
-            }`}
+          disabled={saving || dateLoading}
+          className="w-full mt-6 py-2 rounded text-white bg-yellow-700"
         >
-          {saving ? "Saving..." : "Save Sadhana"}
+          {saving ? "Saving…" : "Save Sadhana"}
         </button>
 
         {message && (
