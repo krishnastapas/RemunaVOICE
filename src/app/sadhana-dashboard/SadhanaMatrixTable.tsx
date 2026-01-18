@@ -115,150 +115,176 @@ export default function SadhanaMatrixTable({
   );
 
   return (
-    <div className="overflow-auto bg-white rounded shadow">
-      <table className="min-w-full text-xs border">
-        <thead>
-          <tr>
-            <th rowSpan={2} className="bg-yellow-300 p-2 border sticky left-0 z-10">
-              Name
-            </th>
+    <div>  <div className="flex flex-wrap gap-3 items-center mb-3 text-xs font-semibold">
+      <div className="flex items-center gap-2">
+        <span className="w-4 h-4 bg-green-500 rounded"></span>
+        <span>Excellent (≥ 90%)</span>
+      </div>
 
-            <th rowSpan={2} className="bg-purple-300 p-2 border">
-              Days Filled
-            </th>
+      <div className="flex items-center gap-2">
+        <span className="w-4 h-4 bg-yellow-400 rounded"></span>
+        <span>Good (60% – 89%)</span>
+      </div>
 
-            <th colSpan={SOUL_KEYS.length} className="bg-blue-300 p-2 border">
-              SOUL
-            </th>
+      <div className="flex items-center gap-2">
+        <span className="w-4 h-4 bg-orange-400 rounded"></span>
+        <span>Needs Improvement (40% – 59%)</span>
+      </div>
 
-            <th colSpan={BODY_KEYS.length} className="bg-green-300 p-2 border">
-              BODY
-            </th>
-
-            <th rowSpan={2} className="bg-gray-300 p-2 border">
-              Total<br />Marks
-            </th>
-
-            <th rowSpan={2} className="bg-gray-400 p-2 border">
-              %
-            </th>
-          </tr>
-
-          <tr>
-            {SOUL_KEYS.map((k) => (
-              <th key={k.key} className="bg-blue-100 p-1 border">
-                {k.label}
-              </th>
-            ))}
-            {BODY_KEYS.map((k) => (
-              <th key={k.key} className="bg-green-100 p-1 border">
-                {k.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-
-        <tbody>
-          {eligibleDevotees.map((d) => {
-            const userRecords = records.filter(
-              (r) => r.userId === d.id
-            );
-
-            // Days filled (unique dates)
-            const daysFilled = new Set(
-              userRecords.map((r) => r.date)
-            ).size;
-
-            /* ---- TOTAL SCORE ---- */
-            const totalObtained = [...SOUL_KEYS, ...BODY_KEYS].reduce(
-              (s: number, k) =>
-                s +
-                calcItemScore(
-                  userRecords,
-                  k.key as keyof SadhanaRecord,
-                  k.marks
-                ),
-              0
-            );
-
-            const totalPct = percent(
-              totalObtained,
-              maxTotalMarks
-            );
-
-            return (
-              <tr key={d.id} className="hover:bg-yellow-50">
-                {/* NAME */}
-                <td className="border p-2 font-semibold sticky left-0 bg-white">
-                  {d.firstName} {d.lastName ?? ""} Pr
-                </td>
-
-                {/* DAYS FILLED */}
-                <td className="border p-2 text-center font-semibold">
-                  {daysFilled} / {totalDays}
-                </td>
-
-                {/* SOUL */}
-                {SOUL_KEYS.map((k) => {
-                  const obtained = calcItemScore(
-                    userRecords,
-                    k.key as keyof SadhanaRecord,
-                    k.marks
-                  );
-                  const max = totalDays * k.marks;
-                  const pct = percent(obtained, max);
-
-                  return (
-                    <td
-                      key={k.key}
-                      className={`border p-1 text-center ${colorByPercent(
-                        pct
-                      )}`}
-                    >
-                      {obtained}
-                    </td>
-                  );
-                })}
-
-                {/* BODY */}
-                {BODY_KEYS.map((k) => {
-                  const obtained = calcItemScore(
-                    userRecords,
-                    k.key as keyof SadhanaRecord,
-                    k.marks
-                  );
-                  const max = totalDays * k.marks;
-                  const pct = percent(obtained, max);
-
-                  return (
-                    <td
-                      key={k.key}
-                      className={`border p-1 text-center ${colorByPercent(
-                        pct
-                      )}`}
-                    >
-                      {obtained}
-                    </td>
-                  );
-                })}
-
-                {/* TOTAL */}
-                <td className="border p-2 text-center font-semibold">
-                  {totalObtained} / {maxTotalMarks}
-                </td>
-
-                <td
-                  className={`border p-2 text-center font-bold ${colorByPercent(
-                    totalPct
-                  )}`}
-                >
-                  {totalPct}%
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="flex items-center gap-2">
+        <span className="w-4 h-4 bg-red-600 rounded"></span>
+        <span>Poor (&lt; 40%)</span>
+      </div>
     </div>
+
+      <div className="overflow-auto bg-white rounded shadow">
+
+        <table className="min-w-full text-xs border">
+          <thead>
+            <tr>
+              <th rowSpan={2} className="bg-yellow-300 p-2 border sticky left-0 z-10">
+                Name
+              </th>
+
+              <th rowSpan={2} className="bg-purple-300 p-2 border">
+                Days Filled
+              </th>
+
+              <th colSpan={SOUL_KEYS.length} className="bg-blue-300 p-2 border">
+                SOUL
+              </th>
+
+              <th colSpan={BODY_KEYS.length} className="bg-green-300 p-2 border">
+                BODY
+              </th>
+
+              <th rowSpan={2} className="bg-gray-300 p-2 border">
+                Total<br />Marks
+              </th>
+
+              <th rowSpan={2} className="bg-gray-400 p-2 border">
+                %
+              </th>
+            </tr>
+
+            <tr>
+              {SOUL_KEYS.map((k) => (
+                <th key={k.key} className="bg-blue-100 p-1 border">
+                  {k.label}
+                </th>
+              ))}
+              {BODY_KEYS.map((k) => (
+                <th key={k.key} className="bg-green-100 p-1 border">
+                  {k.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {eligibleDevotees.map((d) => {
+              const userRecords = records.filter(
+                (r) => r.userId === d.id
+              );
+
+              // Days filled (unique dates)
+              const daysFilled = new Set(
+                userRecords.map((r) => r.date)
+              ).size;
+
+              /* ---- TOTAL SCORE ---- */
+              const totalObtained = [...SOUL_KEYS, ...BODY_KEYS].reduce(
+                (s: number, k) =>
+                  s +
+                  calcItemScore(
+                    userRecords,
+                    k.key as keyof SadhanaRecord,
+                    k.marks
+                  ),
+                0
+              );
+
+              const totalPct = percent(
+                totalObtained,
+                maxTotalMarks
+              );
+
+              return (
+                <tr key={d.id} className="hover:bg-yellow-50">
+                  {/* NAME */}
+                  <td className="border p-2 font-semibold sticky left-0 bg-white">
+                    {d.firstName} {d.lastName ?? ""} Pr
+                  </td>
+
+                  {/* DAYS FILLED */}
+                  <td className="border p-2 text-center font-semibold">
+                    {daysFilled} / {totalDays}
+                  </td>
+
+                  {/* SOUL */}
+                  {SOUL_KEYS.map((k) => {
+                    const obtained = calcItemScore(
+                      userRecords,
+                      k.key as keyof SadhanaRecord,
+                      k.marks
+                    );
+                    const max = totalDays * k.marks;
+                    const pct = percent(obtained, max);
+
+                    return (
+                      <td
+                        key={k.key}
+                        className={`border p-1 text-center ${colorByPercent(
+                          pct
+                        )}`}
+                      >
+                        {obtained}
+                      </td>
+                    );
+                  })}
+
+                  {/* BODY */}
+                  {BODY_KEYS.map((k) => {
+                    const obtained = calcItemScore(
+                      userRecords,
+                      k.key as keyof SadhanaRecord,
+                      k.marks
+                    );
+                    const max = totalDays * k.marks;
+                    const pct = percent(obtained, max);
+
+                    return (
+                      <td
+                        key={k.key}
+                        className={`border p-1 text-center ${colorByPercent(
+                          pct
+                        )}`}
+                      >
+                        {obtained}
+                      </td>
+                    );
+                  })}
+
+                  {/* TOTAL */}
+                  <td className="border p-2 text-center font-semibold">
+                    {totalObtained} / {maxTotalMarks}
+                  </td>
+
+                  <td
+                    className={`border p-2 text-center font-bold ${colorByPercent(
+                      totalPct
+                    )}`}
+                  >
+                    {totalPct}%
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
   );
 }
