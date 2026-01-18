@@ -27,6 +27,7 @@ interface Devotee {
     sadhana?: boolean;
     profile?: boolean;
     sevaAlot?: boolean;
+    preaching?: boolean; // ✅ ADDED
   };
 }
 
@@ -108,9 +109,7 @@ export default function AdminUserList() {
     return (
       <div className="flex flex-col items-center justify-center py-10">
         <div className="h-8 w-8 border-4 border-yellow-700 border-t-transparent rounded-full animate-spin mb-2"></div>
-        <p className="text-yellow-700 font-medium">
-          Loading devotees...
-        </p>
+        <p className="text-yellow-700 font-medium">Loading devotees...</p>
       </div>
     );
 
@@ -171,6 +170,7 @@ export default function AdminUserList() {
                           sadhana: u.features?.sadhana ?? false,
                           profile: u.features?.profile ?? false,
                           sevaAlot: u.features?.sevaAlot ?? false,
+                          preaching: u.features?.preaching ?? false, // ✅ ADDED
                         },
                       })
                     }
@@ -219,14 +219,24 @@ export default function AdminUserList() {
               Enabled Features
             </h4>
 
-            {["seva", "sadhana", "profile", "sevaAlot"].map((f) => (
+            {[
+              "seva",
+              "sadhana",
+              "profile",
+              "sevaAlot",
+              "preaching", // ✅ ADDED
+            ].map((f) => (
               <label
                 key={f}
                 className="flex items-center gap-2 mb-2 capitalize"
               >
                 <input
                   type="checkbox"
-                  checked={editUser.features?.[f as keyof typeof editUser.features] ?? false}
+                  checked={
+                    editUser.features?.[
+                      f as keyof typeof editUser.features
+                    ] ?? false
+                  }
                   onChange={(e) =>
                     setEditUser({
                       ...editUser,
@@ -319,9 +329,7 @@ function Input({
 }) {
   return (
     <div className="mb-3">
-      <label className="block text-sm mb-1">
-        {label}
-      </label>
+      <label className="block text-sm mb-1">{label}</label>
       <input
         type={type}
         value={value}

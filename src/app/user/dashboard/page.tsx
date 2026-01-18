@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FaHandsHelping } from "react-icons/fa";
 import { GiMeditation } from "react-icons/gi";
+import { MdRecordVoiceOver } from "react-icons/md";
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -33,7 +34,6 @@ export default function UserDashboard() {
 
   const features = userData?.features || {};
 
-
   return (
     <div>
       {/* HEADER */}
@@ -54,19 +54,21 @@ export default function UserDashboard() {
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          className={`px-3 py-1 rounded-lg text-sm font-medium ${logoutLoading
-            ? "bg-gray-400"
-            : "bg-yellow-600 hover:bg-yellow-800"
-            }`}
+          className={`px-3 py-1 rounded-lg text-sm font-medium ${
+            logoutLoading
+              ? "bg-gray-400"
+              : "bg-yellow-600 hover:bg-yellow-800"
+          }`}
         >
           {logoutLoading ? "Logging out..." : "Logout"}
         </button>
       </header>
+
       <h2 className="text-xl font-bold text-yellow-800 mb-4 text-center">
         📿 Dashboard
       </h2>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 px-4">
         {/* SEVA */}
         {features.seva && (
           <button
@@ -89,7 +91,19 @@ export default function UserDashboard() {
           </button>
         )}
 
-          {features.sevaAlot && (
+        {/* PREACHING */}
+        {features.preaching && (
+          <button
+            onClick={() => router.push("/user/preaching")}
+            className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center hover:shadow-md transition"
+          >
+            <MdRecordVoiceOver className="text-3xl text-yellow-700 mb-2" />
+            <span className="font-semibold">Preaching</span>
+          </button>
+        )}
+
+        {/* SEVA ADMIN */}
+        {features.sevaAlot && (
           <button
             onClick={() => router.push("/user/seva-board-admin")}
             className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center"
@@ -98,10 +112,9 @@ export default function UserDashboard() {
             <span className="font-semibold">Seva Board Admin</span>
           </button>
         )}
-
       </div>
 
-      {!features.seva && !features.sadhana && (
+      {!features.seva && !features.sadhana && !features.preaching && (
         <p className="text-center text-yellow-700 mt-6">
           No features enabled for your account 🙏
         </p>
