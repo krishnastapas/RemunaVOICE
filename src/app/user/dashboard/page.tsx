@@ -54,11 +54,10 @@ export default function UserDashboard() {
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            logoutLoading
+          className={`px-3 py-1 rounded-lg text-sm font-medium ${logoutLoading
               ? "bg-gray-400"
               : "bg-yellow-600 hover:bg-yellow-800"
-          }`}
+            }`}
         >
           {logoutLoading ? "Logging out..." : "Logout"}
         </button>
@@ -112,6 +111,15 @@ export default function UserDashboard() {
             <span className="font-semibold">Seva Board Admin</span>
           </button>
         )}
+
+        {/* 📊 REPORTS */}
+        <button
+          onClick={() => router.push("/user/reports")}
+          className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center hover:shadow-md transition"
+        >
+          📊
+          <span className="font-semibold mt-2">Reports</span>
+        </button>
       </div>
 
       {!features.seva && !features.sadhana && !features.preaching && (

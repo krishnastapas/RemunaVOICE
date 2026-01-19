@@ -5,11 +5,13 @@ import {
   collection,
   getDocs,
   query,
+  where,
   orderBy,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import BackHeaderButton from "@/components/BackHeaderButton";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 /* =====================
  TYPES
@@ -31,22 +33,28 @@ interface Interaction {
 ===================== */
 
 export default function PreachingInteractionsPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [menteesMap, setMenteesMap] = useState<Record<string, string>>({});
   const [filter, setFilter] =
     useState<InteractionType | "ALL">("ALL");
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+
   /* -------- LOAD DATA -------- */
   useEffect(() => {
+    if (!user) return;
+
     const load = async () => {
       setLoading(true);
 
-      // 1️⃣ Load interactions (CORRECT collection)
+      // ✅ ONLY CURRENT MENTOR'S INTERACTIONS
       const tracksSnap = await getDocs(
         query(
           collection(db, "preaching_tracks"),
-          orderBy("date", "desc")
+          where("mentorId", "==", user.uid),
+          // orderBy("date", "desc")
         )
       );
 
@@ -55,7 +63,7 @@ export default function PreachingInteractionsPage() {
         ...(d.data() as Omit<Interaction, "id">),
       }));
 
-      // 2️⃣ Load mentees (for name resolution)
+      // Load mentees (for name resolution)
       const menteesSnap = await getDocs(collection(db, "mentees"));
       const menteeMap: Record<string, string> = {};
       menteesSnap.docs.forEach((d) => {
@@ -68,12 +76,14 @@ export default function PreachingInteractionsPage() {
     };
 
     load();
-  }, []);
+  }, [user]);
 
   const filtered =
     filter === "ALL"
       ? interactions
-      : interactions.filter((i) => i.interactionType === filter);
+      : interactions.filter(
+          (i) => i.interactionType === filter
+        );
 
   /* -------- UI -------- */
   return (
@@ -86,7 +96,7 @@ export default function PreachingInteractionsPage() {
 
       <div className="px-4 pt-4 pb-24 max-w-md mx-auto">
         <h1 className="text-xl font-bold text-center text-yellow-800 mb-3">
-          📋 Interaction Records
+          📋 My Interaction Records
         </h1>
 
         {/* FILTER */}
@@ -98,18 +108,19 @@ export default function PreachingInteractionsPage() {
                 onClick={() =>
                   setFilter(t as InteractionType | "ALL")
                 }
-                className={`text-xs px-3 py-1 rounded-full border ${filter === t
-                  ? "bg-yellow-700 text-white"
-                  : "bg-yellow-50 text-yellow-800"
-                  }`}
+                className={`text-xs px-3 py-1 rounded-full border ${
+                  filter === t
+                    ? "bg-yellow-700 text-white"
+                    : "bg-yellow-50 text-yellow-800"
+                }`}
               >
                 {t === "camp_class"
                   ? "🏕️ Camp / Class"
                   : t === "normal_meet"
-                    ? "🤝 Normal Meet"
-                    : t === "mmc"
-                      ? "📞 MMC"
-                      : "All"}
+                  ? "🤝 Normal Meet"
+                  : t === "mmc"
+                  ? "📞 MMC"
+                  : "All"}
               </button>
             )
           )}
@@ -130,27 +141,27 @@ export default function PreachingInteractionsPage() {
               <div
                 key={i.id}
                 onClick={() =>
-                  router.push(`/user/preaching/interactions/${i.id}`)
+                  router.push(
+                    `/user/preaching/interactions/${i.id}`
+                  )
                 }
-                className="bg-white border border-yellow-200 rounded-lg p-3 shadow-sm"
+                className="bg-white border border-yellow-200 rounded-lg p-3 shadow-sm cursor-pointer hover:bg-yellow-50"
               >
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-sm text-yellow-800">
                     {menteesMap[i.menteeId] || "Unknown Mentee"}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {new Date(i.date).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                    })}
+                    {new Date(i.date).toLocaleDateString(
+                      "en-IN",
+                      { day: "numeric", month: "short" }
+                    )}
                   </span>
                 </div>
 
                 <span className="inline-block mt-2 text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
                   {i.interactionType}
                 </span>
-
-
 
                 <p className="text-xs text-gray-700 mt-2">
                   <strong>Outcome:</strong> {i.outcome}
