@@ -90,19 +90,33 @@ export default function SadhanaMatrixTable({
   records: SadhanaRecord[];
   weekMode?: boolean;
 }) {
-  // total unique days in current view (week-safe)
-  const uniqueDays = new Set(records.map((r) => r.date));
-  const totalDays = weekMode ? uniqueDays.size || 7 : uniqueDays.size;
+  /* =====================
+     FIXED TOTAL DAYS LOGIC
+     ===================== */
+
+  const today = new Date();
+
+  let totalDays = 0;
+
+  if (weekMode) {
+    // Sunday → Today
+    const dayOfWeek = today.getDay(); // Sun = 0
+    totalDays = dayOfWeek + 1;
+  } else {
+    // Month: 1 → Today
+    totalDays = today.getDate();
+  }
+
   const maxTotalMarks = totalDays * DAILY_TOTAL;
 
-  // only devotees allowed for sadhana
+  /* ONLY Sadhana-enabled devotees */
   const eligibleDevotees = devotees.filter(
     (d) => d.features?.sadhana
   );
 
   return (
     <div className="overflow-auto bg-white rounded shadow p-3">
-      {/* COLOR LEGEND */}
+      {/* LEGEND */}
       <div className="flex flex-wrap gap-4 mb-3 text-xs font-semibold">
         <Legend color="bg-green-500" label="Excellent (≥ 90%)" />
         <Legend color="bg-yellow-400" label="Good (60% – 89%)" />
@@ -111,11 +125,12 @@ export default function SadhanaMatrixTable({
       </div>
 
       <table className="min-w-full text-xs border-separate border-spacing-y-2">
-        {/* HEADER */}
         <thead className="bg-yellow-100 sticky top-0 z-10">
           <tr>
             <th className="p-2 border">Name</th>
-            <th className="p-2 border">Days</th>
+            <th className="p-2 border">
+              Days ({totalDays})
+            </th>
             {[...SOUL_KEYS, ...BODY_KEYS].map((k) => (
               <th key={k.key} className="p-2 border">
                 {k.label}
@@ -126,7 +141,6 @@ export default function SadhanaMatrixTable({
           </tr>
         </thead>
 
-        {/* EACH DEVOTEE AS SEPARATE BOX */}
         {eligibleDevotees.map((d) => {
           const userRecords = records.filter(
             (r) => r.userId === d.id
@@ -158,17 +172,14 @@ export default function SadhanaMatrixTable({
               className="bg-white border border-gray-300 rounded-lg shadow-sm"
             >
               <tr className="hover:bg-yellow-50">
-                {/* NAME */}
                 <td className="p-2 font-semibold border">
                   {d.firstName} {d.lastName ?? ""} Pr
                 </td>
 
-                {/* DAYS */}
                 <td className="p-2 text-center font-semibold border">
                   {daysFilled} / {totalDays}
                 </td>
 
-                {/* SOUL + BODY */}
                 {[...SOUL_KEYS, ...BODY_KEYS].map((k) => {
                   const obtained = calcItemScore(
                     userRecords,
@@ -190,7 +201,6 @@ export default function SadhanaMatrixTable({
                   );
                 })}
 
-                {/* TOTAL */}
                 <td className="p-2 text-center font-semibold border">
                   {totalObtained} / {maxTotalMarks}
                 </td>

@@ -26,7 +26,10 @@ interface UserData {
     profile?: boolean;
     sevaAlot?: boolean;
     preaching?: boolean;
+    morningProgram?: boolean;
+    admin?: boolean;
   }
+  adminFeatures?: string[];
 }
 
 interface AuthContextType {
