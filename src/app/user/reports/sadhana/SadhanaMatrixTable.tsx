@@ -1,15 +1,15 @@
 "use client";
 
-/* =======================
+/* =====================
  TYPES
-======================= */
+===================== */
 
 type YesNo = 0 | 1;
 type JapaTime = 0 | 1 | 2;
 
 export interface SadhanaRecord {
   userId: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   japaBefore10: JapaTime;
   personalHearing1hr: YesNo;
   spBookReading1hr: YesNo;
@@ -30,9 +30,9 @@ export interface Devotee {
   };
 }
 
-/* =======================
+/* =====================
  CONFIG
-======================= */
+===================== */
 
 const SOUL_KEYS = [
   { key: "japaBefore10", label: "Japa", marks: 2 },
@@ -49,28 +49,17 @@ const BODY_KEYS = [
   { key: "studyOrPreaching1hr", label: "Study / Preach", marks: 1 },
 ] as const;
 
-const DAILY_TOTAL_MARKS = 10;
+const DAILY_TOTAL = 10;
 
-/* =======================
+/* =====================
  HELPERS
-======================= */
+===================== */
 
-function daysTillDate(year: number, month: number): number {
-  const today = new Date();
-  if (
-    today.getFullYear() === year &&
-    today.getMonth() === month
-  ) {
-    return today.getDate();
-  }
-  return new Date(year, month + 1, 0).getDate();
-}
-
-function percent(obtained: number, total: number): number {
+function percent(obtained: number, total: number) {
   return total === 0 ? 0 : Math.round((obtained / total) * 100);
 }
 
-function colorByPercent(p: number): string {
+function colorByPercent(p: number) {
   if (p >= 90) return "bg-green-500 text-white";
   if (p >= 60) return "bg-yellow-400 text-black";
   if (p >= 40) return "bg-orange-400 text-black";
@@ -81,210 +70,162 @@ function calcItemScore(
   records: SadhanaRecord[],
   key: keyof SadhanaRecord,
   marks: number
-): number {
+) {
   return records.reduce(
-    (sum: number, r) => sum + (r[key] === 1 ? marks : 0),
+    (sum, r) => sum + (r[key] === 1 ? marks : 0),
     0
   );
 }
 
-/* =======================
+/* =====================
  COMPONENT
-======================= */
-
-interface Props {
-  devotees: Devotee[];
-  records: SadhanaRecord[];
-  year: number;
-  month: number; // 0-based
-}
+===================== */
 
 export default function SadhanaMatrixTable({
   devotees,
   records,
-  year,
-  month,
-}: Props) {
-  const totalDays = daysTillDate(year, month);
-  const maxTotalMarks = totalDays * DAILY_TOTAL_MARKS;
+  weekMode,
+}: {
+  devotees: Devotee[];
+  records: SadhanaRecord[];
+  weekMode?: boolean;
+}) {
+  // total unique days in current view (week-safe)
+  const uniqueDays = new Set(records.map((r) => r.date));
+  const totalDays = weekMode ? uniqueDays.size || 7 : uniqueDays.size;
+  const maxTotalMarks = totalDays * DAILY_TOTAL;
 
-  // ✅ ONLY devotees with sadhana permission
-  console.log(devotees);
+  // only devotees allowed for sadhana
   const eligibleDevotees = devotees.filter(
-    (d) => d.features?.sadhana == true
+    (d) => d.features?.sadhana
   );
 
   return (
-    <div>  <div className="flex flex-wrap gap-3 items-center mb-3 text-xs font-semibold">
-      <div className="flex items-center gap-2">
-        <span className="w-4 h-4 bg-green-500 rounded"></span>
-        <span>Excellent (≥ 90%)</span>
+    <div className="overflow-auto bg-white rounded shadow p-3">
+      {/* COLOR LEGEND */}
+      <div className="flex flex-wrap gap-4 mb-3 text-xs font-semibold">
+        <Legend color="bg-green-500" label="Excellent (≥ 90%)" />
+        <Legend color="bg-yellow-400" label="Good (60% – 89%)" />
+        <Legend color="bg-orange-400" label="Needs Improvement (40% – 59%)" />
+        <Legend color="bg-red-600" label="Poor (< 40%)" />
       </div>
 
-      <div className="flex items-center gap-2">
-        <span className="w-4 h-4 bg-yellow-400 rounded"></span>
-        <span>Good (60% – 89%)</span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="w-4 h-4 bg-orange-400 rounded"></span>
-        <span>Needs Improvement (40% – 59%)</span>
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="w-4 h-4 bg-red-600 rounded"></span>
-        <span>Poor (&lt; 40%)</span>
-      </div>
-    </div>
-
-      <div className="overflow-auto bg-white rounded shadow">
-
-        <table className="min-w-full text-xs border">
-          <thead>
-            <tr>
-              <th rowSpan={2} className="bg-yellow-300 p-2 border sticky left-0 z-10">
-                Name
+      <table className="min-w-full text-xs border-separate border-spacing-y-2">
+        {/* HEADER */}
+        <thead className="bg-yellow-100 sticky top-0 z-10">
+          <tr>
+            <th className="p-2 border">Name</th>
+            <th className="p-2 border">Days</th>
+            {[...SOUL_KEYS, ...BODY_KEYS].map((k) => (
+              <th key={k.key} className="p-2 border">
+                {k.label}
               </th>
+            ))}
+            <th className="p-2 border">Total</th>
+            <th className="p-2 border">%</th>
+          </tr>
+        </thead>
 
-              <th rowSpan={2} className="bg-purple-300 p-2 border">
-                Days Filled
-              </th>
+        {/* EACH DEVOTEE AS SEPARATE BOX */}
+        {eligibleDevotees.map((d) => {
+          const userRecords = records.filter(
+            (r) => r.userId === d.id
+          );
 
-              <th colSpan={SOUL_KEYS.length} className="bg-blue-300 p-2 border">
-                SOUL
-              </th>
+          const daysFilled = new Set(
+            userRecords.map((r) => r.date)
+          ).size;
 
-              <th colSpan={BODY_KEYS.length} className="bg-green-300 p-2 border">
-                BODY
-              </th>
+          const totalObtained = [...SOUL_KEYS, ...BODY_KEYS].reduce(
+            (s, k) =>
+              s +
+              calcItemScore(
+                userRecords,
+                k.key as keyof SadhanaRecord,
+                k.marks
+              ),
+            0
+          );
 
-              <th rowSpan={2} className="bg-gray-300 p-2 border">
-                Total<br />Marks
-              </th>
+          const totalPct = percent(
+            totalObtained,
+            maxTotalMarks
+          );
 
-              <th rowSpan={2} className="bg-gray-400 p-2 border">
-                %
-              </th>
-            </tr>
+          return (
+            <tbody
+              key={d.id}
+              className="bg-white border border-gray-300 rounded-lg shadow-sm"
+            >
+              <tr className="hover:bg-yellow-50">
+                {/* NAME */}
+                <td className="p-2 font-semibold border">
+                  {d.firstName} {d.lastName ?? ""} Pr
+                </td>
 
-            <tr>
-              {SOUL_KEYS.map((k) => (
-                <th key={k.key} className="bg-blue-100 p-1 border">
-                  {k.label}
-                </th>
-              ))}
-              {BODY_KEYS.map((k) => (
-                <th key={k.key} className="bg-green-100 p-1 border">
-                  {k.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
+                {/* DAYS */}
+                <td className="p-2 text-center font-semibold border">
+                  {daysFilled} / {totalDays}
+                </td>
 
-          <tbody>
-            {eligibleDevotees.map((d) => {
-              const userRecords = records.filter(
-                (r) => r.userId === d.id
-              );
-
-              // Days filled (unique dates)
-              const daysFilled = new Set(
-                userRecords.map((r) => r.date)
-              ).size;
-
-              /* ---- TOTAL SCORE ---- */
-              const totalObtained = [...SOUL_KEYS, ...BODY_KEYS].reduce(
-                (s: number, k) =>
-                  s +
-                  calcItemScore(
+                {/* SOUL + BODY */}
+                {[...SOUL_KEYS, ...BODY_KEYS].map((k) => {
+                  const obtained = calcItemScore(
                     userRecords,
                     k.key as keyof SadhanaRecord,
                     k.marks
-                  ),
-                0
-              );
+                  );
+                  const max = totalDays * k.marks;
+                  const pct = percent(obtained, max);
 
-              const totalPct = percent(
-                totalObtained,
-                maxTotalMarks
-              );
+                  return (
+                    <td
+                      key={k.key}
+                      className={`p-2 text-center border ${colorByPercent(
+                        pct
+                      )}`}
+                    >
+                      {obtained}
+                    </td>
+                  );
+                })}
 
-              return (
-                <tr key={d.id} className="hover:bg-yellow-50">
-                  {/* NAME */}
-                  <td className="border p-2 font-semibold sticky left-0 bg-white">
-                    {d.firstName} {d.lastName ?? ""} Pr
-                  </td>
+                {/* TOTAL */}
+                <td className="p-2 text-center font-semibold border">
+                  {totalObtained} / {maxTotalMarks}
+                </td>
 
-                  {/* DAYS FILLED */}
-                  <td className="border p-2 text-center font-semibold">
-                    {daysFilled} / {totalDays}
-                  </td>
-
-                  {/* SOUL */}
-                  {SOUL_KEYS.map((k) => {
-                    const obtained = calcItemScore(
-                      userRecords,
-                      k.key as keyof SadhanaRecord,
-                      k.marks
-                    );
-                    const max = totalDays * k.marks;
-                    const pct = percent(obtained, max);
-
-                    return (
-                      <td
-                        key={k.key}
-                        className={`border p-1 text-center ${colorByPercent(
-                          pct
-                        )}`}
-                      >
-                        {obtained}
-                      </td>
-                    );
-                  })}
-
-                  {/* BODY */}
-                  {BODY_KEYS.map((k) => {
-                    const obtained = calcItemScore(
-                      userRecords,
-                      k.key as keyof SadhanaRecord,
-                      k.marks
-                    );
-                    const max = totalDays * k.marks;
-                    const pct = percent(obtained, max);
-
-                    return (
-                      <td
-                        key={k.key}
-                        className={`border p-1 text-center ${colorByPercent(
-                          pct
-                        )}`}
-                      >
-                        {obtained}
-                      </td>
-                    );
-                  })}
-
-                  {/* TOTAL */}
-                  <td className="border p-2 text-center font-semibold">
-                    {totalObtained} / {maxTotalMarks}
-                  </td>
-
-                  <td
-                    className={`border p-2 text-center font-bold ${colorByPercent(
-                      totalPct
-                    )}`}
-                  >
-                    {totalPct}%
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-
+                <td
+                  className={`p-2 text-center font-bold border ${colorByPercent(
+                    totalPct
+                  )}`}
+                >
+                  {totalPct}%
+                </td>
+              </tr>
+            </tbody>
+          );
+        })}
+      </table>
     </div>
+  );
+}
 
+/* =====================
+ UI HELPERS
+===================== */
+
+function Legend({
+  color,
+  label,
+}: {
+  color: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`w-4 h-4 rounded ${color}`} />
+      <span>{label}</span>
+    </div>
   );
 }

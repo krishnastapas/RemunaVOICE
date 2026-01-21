@@ -87,27 +87,3 @@ export function daysTillDate(year: number, month: number): number {
   }
   return new Date(year, month + 1, 0).getDate();
 }
-
-
-
-export function formatDate(d: Date) {
-  return d.toISOString().split("T")[0];
-}
-export function getWeekRange(baseDate: Date) {
-  const date = new Date(baseDate);
-  const day = date.getDay(); // 0 = Sunday
-
-  const start = new Date(date);
-  start.setDate(date.getDate() - day);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(start.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-
-  return { start, end };
-}
-
-export function formatYMD(d: Date): string {
-  return d.toISOString().split("T")[0];
-}
