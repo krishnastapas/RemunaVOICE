@@ -8,9 +8,11 @@ import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { FaHandsHelping } from "react-icons/fa";
-import { GiMeditation, GiSunrise } from "react-icons/gi";
+/* ICONS */
+import { FaHandsHelping, FaBook, FaClipboardList } from "react-icons/fa";
+import { GiMeditation, GiSunrise, GiCookingPot } from "react-icons/gi";
 import { MdRecordVoiceOver, MdAdminPanelSettings } from "react-icons/md";
+import { HiOutlineDocumentReport } from "react-icons/hi";
 
 /* =====================
  HELPERS
@@ -37,7 +39,7 @@ export default function UserDashboard() {
 
   const [birthdayNames, setBirthdayNames] = useState<string[]>([]);
   const [dailyQuote, setDailyQuote] = useState<{
-    text: string;
+    text?: string;
     imageUrl?: string;
   } | null>(null);
 
@@ -68,7 +70,7 @@ export default function UserDashboard() {
     loadBirthdays();
   }, []);
 
-  /* 📜 FETCH DAILY QUOTE */
+  /* 📜 DAILY QUOTE */
   useEffect(() => {
     const loadQuote = async () => {
       const res = await fetch("/api/daily-quote");
@@ -111,11 +113,10 @@ export default function UserDashboard() {
         <button
           onClick={handleLogout}
           disabled={logoutLoading}
-          className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            logoutLoading
-              ? "bg-gray-400"
-              : "bg-yellow-600 hover:bg-yellow-800"
-          }`}
+          className={`px-3 py-1 rounded-lg text-sm font-medium ${logoutLoading
+            ? "bg-gray-400"
+            : "bg-yellow-600 hover:bg-yellow-800"
+            }`}
         >
           {logoutLoading ? "Logging out..." : "Logout"}
         </button>
@@ -151,33 +152,91 @@ export default function UserDashboard() {
             <img
               src={dailyQuote.imageUrl}
               alt="Daily Quote"
-              className="mx-auto mb-3 rounded-lg max-h-48 object-cover"
+              className="mx-auto mb-3 rounded-lg max-h-56 object-contain"
             />
           )}
 
-          <p className="text-sm italic text-gray-800">
-            “{dailyQuote.text}”
-          </p>
+          {dailyQuote.text && (
+            <p className="text-sm italic text-gray-800">
+              “{dailyQuote.text}”
+            </p>
+          )}
         </div>
       )}
 
       {/* FEATURE GRID */}
       <div className="grid grid-cols-2 gap-4 px-4 pb-10">
         {features.seva && (
-          <Card icon={<FaHandsHelping />} label="Seva" onClick={() => router.push("/user/seva-board")} />
+          <Card
+            icon={<FaHandsHelping />}
+            label="My Seva"
+            onClick={() => router.push("/user/my-seva")}
+          />
         )}
+
         {features.sadhana && (
-          <Card icon={<GiMeditation />} label="Sadhana" onClick={() => router.push("/user/sadhana")} />
+          <Card
+            icon={<GiMeditation />}
+            label="Sadhana"
+            onClick={() => router.push("/user/sadhana")}
+          />
         )}
+
         {features.preaching && (
-          <Card icon={<MdRecordVoiceOver />} label="Preaching" onClick={() => router.push("/user/preaching")} />
+          <Card
+            icon={<MdRecordVoiceOver />}
+            label="Preaching"
+            onClick={() => router.push("/user/preaching")}
+          />
         )}
+
         {features.morningProgram && (
-          <Card icon={<GiSunrise />} label="Morning Program" onClick={() => router.push("/user/morning-program")} />
+          <Card
+            icon={<GiSunrise />}
+            label="Morning Program"
+            onClick={() => router.push("/user/morning-program")}
+          />
         )}
+
+        {/* 📋 SEVA BOARD */}
+       {features.sevaBoard && (
+        <Card
+          icon={<FaClipboardList />}
+          label="Seva Board"
+          onClick={() => router.push("/user/seva-board")}
+        />)}
+
+        {/* 🍽️ KITCHEN */}
+        {features.kitchen && (<Card
+          icon={<GiCookingPot />}
+          label="Kitchen"
+          onClick={() => router.push("/user/kitchen")}
+        />)}
+
+        {/* 📚 LIBRARY */}
+        {features.library && (
+          <Card
+            icon={<FaBook />}
+            label="Library"
+            onClick={() => router.push("/user/library")}
+          />)}
+
+        {/* 🛡️ ADMIN */}
         {features.admin && (
-          <Card icon={<MdAdminPanelSettings />} label="Admin" onClick={() => router.push("/user/admin")} />
+          <Card
+            icon={<MdAdminPanelSettings />}
+            label="Admin"
+            onClick={() => router.push("/user/admin")}
+          />
         )}
+
+        {/* 📊 REPORTS (CHANGED ICON) */}
+        {features.reports && (
+          <Card
+            icon={<HiOutlineDocumentReport />}
+            label="Reports"
+            onClick={() => router.push("/user/reports")}
+          />)}
       </div>
     </div>
   );

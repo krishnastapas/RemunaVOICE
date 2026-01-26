@@ -6,14 +6,25 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-/* ---------------- TYPES ---------------- */
+/* ================= TYPES ================= */
 
 type AdminFeature = "sevaAlot" | "morningProgramAlot";
+
+type UserFeature =
+  | "admin"
+  | "seva"
+  | "sadhana"
+  | "profile"
+  | "preaching"
+  | "morningProgram"
+  | "library"
+  | "kitchen"
+  | "reports"
+  | "sevaBoard";
 
 interface Devotee {
   uid: string;
@@ -22,87 +33,105 @@ interface Devotee {
   email: string;
   phone?: string;
   dob?: string;
-  provider?: string;
   createdAt?: Timestamp;
-  displayName?: string;
 
-  /** NORMAL FEATURES */
-  features?: {
-    admin?: boolean;
-    seva?: boolean;
-    sadhana?: boolean;
-    profile?: boolean;
-    preaching?: boolean;
-    morningProgram?: boolean;
-  };
-
-  /** ADMIN FEATURES (SEPARATE) */
+  features: Record<UserFeature, boolean>;
   adminFeatures: AdminFeature[];
 }
 
 type DevoteeDoc = Omit<Devotee, "uid">;
 
-/* ---------------- PAGE ---------------- */
+/* ================= CONSTANTS ================= */
+
+const ALL_USER_FEATURES: UserFeature[] = [
+  "admin",
+  "seva",
+  "sadhana",
+  "profile",
+  "preaching",
+  "morningProgram",
+  "library",
+  "kitchen",
+  "reports",
+  "sevaBoard",
+];
+
+const ALL_ADMIN_FEATURES: AdminFeature[] = [
+  "sevaAlot",
+  "morningProgramAlot",
+];
+
+/* ================= PAGE ================= */
 
 export default function AdminUserList() {
   const [users, setUsers] = useState<Devotee[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [editUser, setEditUser] = useState<Devotee | null>(null);
-  const [deleteUser, setDeleteUser] = useState<Devotee | null>(null);
   const [saving, setSaving] = useState(false);
 
-  /* -------- FETCH USERS -------- */
+  /* ---------- FETCH USERS ---------- */
   useEffect(() => {
     const fetchUsers = async () => {
-      try {
-        const snap = await getDocs(collection(db, "devotees"));
-        setUsers(
-          snap.docs.map((d) => ({
+      const snap = await getDocs(collection(db, "devotees"));
+
+      setUsers(
+        snap.docs.map((d) => {
+          const data = d.data() as DevoteeDoc;
+
+          const normalizedFeatures = ALL_USER_FEATURES.reduce(
+            (acc, f) => {
+              acc[f] = data.features?.[f] ?? false;
+              return acc;
+            },
+            {} as Record<UserFeature, boolean>
+          );
+
+          return {
             uid: d.id,
-            ...(d.data() as DevoteeDoc),
-          }))
-        );
-      } finally {
-        setLoading(false);
-      }
+            ...data,
+            features: normalizedFeatures,
+            adminFeatures: data.adminFeatures || [],
+          };
+        })
+      );
+
+      setLoading(false);
     };
+
     fetchUsers();
   }, []);
 
-  /* -------- SAVE EDIT -------- */
+  /* ---------- SAVE EDIT ---------- */
   const handleSaveEdit = async () => {
     if (!editUser) return;
     setSaving(true);
 
-    try {
-      await updateDoc(doc(db, "devotees", editUser.uid), {
-        firstName: editUser.firstName || "",
-        lastName: editUser.lastName || "",
-        phone: editUser.phone || "",
-        dob: editUser.dob || "",
-        features: editUser.features || {},
-        adminFeatures: editUser.adminFeatures || [],
-      });
+    await updateDoc(doc(db, "devotees", editUser.uid), {
+      firstName: editUser.firstName || "",
+      lastName: editUser.lastName || "",
+      phone: editUser.phone || "",
+      dob: editUser.dob || "",
+      features: editUser.features,
+      adminFeatures: editUser.adminFeatures,
+    });
 
-      setUsers((prev) =>
-        prev.map((u) => (u.uid === editUser.uid ? editUser : u))
-      );
-      setEditUser(null);
-    } finally {
-      setSaving(false);
-    }
+    setUsers((prev) =>
+      prev.map((u) => (u.uid === editUser.uid ? editUser : u))
+    );
+
+    setEditUser(null);
+    setSaving(false);
   };
 
-  /* -------- LOADING -------- */
+  /* ---------- LOADING ---------- */
   if (loading)
     return (
-      <div className="text-center py-10 text-yellow-700">
+      <div className="text-center py-10 text-yellow-700 font-semibold">
         Loading devotees...
       </div>
     );
 
-  /* -------- UI -------- */
+  /* ---------- UI ---------- */
   return (
     <div className="bg-white p-6 rounded-xl shadow border border-yellow-300">
       <h2 className="text-2xl font-bold mb-4 text-yellow-800 text-center">
@@ -127,32 +156,16 @@ export default function AdminUserList() {
               </td>
               <td className="p-2">{u.email}</td>
               <td className="p-2 text-xs">
-                {Object.entries(u.features || {})
-                  .filter(([, v]) => v)
-                  .map(([k]) => k)
-                  .join(", ") || "-"}
+                {ALL_USER_FEATURES.filter((f) => u.features[f]).join(", ") ||
+                  "-"}
               </td>
               <td className="p-2 text-xs text-blue-700">
-                {u.adminFeatures?.join(", ") || "-"}
+                {u.adminFeatures.join(", ") || "-"}
               </td>
               <td className="p-2 text-center">
                 <button
                   className="text-blue-600 font-semibold"
-                  onClick={() =>
-                    setEditUser({
-                      ...u,
-                      features: {
-                        admin: u.features?.admin ?? false,
-                        seva: u.features?.seva ?? false,
-                        sadhana: u.features?.sadhana ?? false,
-                        profile: u.features?.profile ?? false,
-                        preaching: u.features?.preaching ?? false,
-                        morningProgram:
-                          u.features?.morningProgram ?? false,
-                      },
-                      adminFeatures: u.adminFeatures ?? [],
-                    })
-                  }
+                  onClick={() => setEditUser({ ...u })}
                 >
                   Edit
                 </button>
@@ -162,12 +175,11 @@ export default function AdminUserList() {
         </tbody>
       </table>
 
-      {/* -------- EDIT MODAL -------- */}
+      {/* ---------- EDIT MODAL ---------- */}
       {editUser && (
         <Modal>
           <h3 className="font-bold text-lg mb-3">Edit User</h3>
 
-          {/* BASIC INFO */}
           <Input
             label="First Name"
             value={editUser.firstName || ""}
@@ -198,17 +210,13 @@ export default function AdminUserList() {
             }
           />
 
-          {/* FEATURES */}
+          {/* USER FEATURES */}
           <h4 className="font-semibold mt-3">User Features</h4>
-          {Object.keys(editUser.features || {}).map((f) => (
+          {ALL_USER_FEATURES.map((f) => (
             <Checkbox
               key={f}
               label={f}
-              checked={
-                editUser.features?.[
-                  f as keyof typeof editUser.features
-                ] ?? false
-              }
+              checked={editUser.features[f]}
               onChange={(v) =>
                 setEditUser({
                   ...editUser,
@@ -223,25 +231,21 @@ export default function AdminUserList() {
 
           {/* ADMIN FEATURES */}
           <h4 className="font-semibold mt-3">Admin Permissions</h4>
-          {(["sevaAlot", "morningProgramAlot"] as AdminFeature[]).map(
-            (af) => (
-              <Checkbox
-                key={af}
-                label={af}
-                checked={editUser.adminFeatures?.includes(af)}
-                onChange={(v) =>
-                  setEditUser({
-                    ...editUser,
-                    adminFeatures: v
-                      ? [...(editUser.adminFeatures || []), af]
-                      : (editUser.adminFeatures || []).filter(
-                          (x) => x !== af
-                        ),
-                  })
-                }
-              />
-            )
-          )}
+          {ALL_ADMIN_FEATURES.map((af) => (
+            <Checkbox
+              key={af}
+              label={af}
+              checked={editUser.adminFeatures.includes(af)}
+              onChange={(v) =>
+                setEditUser({
+                  ...editUser,
+                  adminFeatures: v
+                    ? [...editUser.adminFeatures, af]
+                    : editUser.adminFeatures.filter((x) => x !== af),
+                })
+              }
+            />
+          ))}
 
           <div className="flex gap-3 mt-4">
             <button
@@ -264,14 +268,12 @@ export default function AdminUserList() {
   );
 }
 
-/* ---------------- COMPONENTS ---------------- */
+/* ================= COMPONENTS ================= */
 
 function Modal({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-[420px]">
-        {children}
-      </div>
+      <div className="bg-white p-6 rounded w-[420px]">{children}</div>
     </div>
   );
 }
@@ -289,7 +291,7 @@ function Input({
 }) {
   return (
     <div className="mb-2">
-      <label className="block text-sm mb-1">{label}</label>
+      <label className="block text-sm mb-1 capitalize">{label}</label>
       <input
         type={type}
         value={value}

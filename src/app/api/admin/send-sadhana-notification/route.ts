@@ -1,28 +1,15 @@
 import { NextResponse } from "next/server";
-import { adminDb, adminMessaging } from "@/lib/firebaseAdmin";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-export async function POST() {
-  const snap = await adminDb
-    .collection("devotees")
-    .where("features.sadhana", "==", true)
-    .get();
+export async function GET() {
+  const snap = await getDoc(doc(db, "daily_quote", "current"));
 
-  const tokens: string[] = [];
-
-  snap.forEach((doc) => {
-    const token = doc.data().fcmToken;
-    if (token) tokens.push(token);
-  });
-
-  if (tokens.length) {
-    await adminMessaging.sendEachForMulticast({
-      tokens,
-      notification: {
-        title: "📿 Sadhana Reminder",
-        body: "Please fill your Sadhana card 🙏",
-      },
-    });
+  if (!snap.exists()) {
+    return NextResponse.json({ quote: null });
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    quote: snap.data(),
+  });
 }

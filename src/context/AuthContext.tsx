@@ -28,6 +28,10 @@ interface UserData {
     preaching?: boolean;
     morningProgram?: boolean;
     admin?: boolean;
+    kitchen?: boolean;
+    library?: boolean;
+    reports?: boolean;
+    sevaBoard?: boolean;
   }
   adminFeatures?: string[];
 }

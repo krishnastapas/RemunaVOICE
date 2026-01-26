@@ -9,7 +9,7 @@ type JapaTime = 0 | 1 | 2;
 
 export interface SadhanaRecord {
   userId: string;
-  date: string;
+  date: string; // YYYY-MM-DD
   japaBefore10: JapaTime;
   personalHearing1hr: YesNo;
   spBookReading1hr: YesNo;
@@ -91,20 +91,51 @@ export default function SadhanaMatrixTable({
   weekMode?: boolean;
 }) {
   /* =====================
-     FIXED TOTAL DAYS LOGIC
-     ===================== */
+   FIXED TOTAL DAYS LOGIC
+  ===================== */
 
   const today = new Date();
+
+  // Get dates present in records (to know which week/month we are viewing)
+  const recordDates = records.map((r) => new Date(r.date));
 
   let totalDays = 0;
 
   if (weekMode) {
-    // Sunday → Today
-    const dayOfWeek = today.getDay(); // Sun = 0
-    totalDays = dayOfWeek + 1;
+    if (recordDates.length === 0) {
+      totalDays = 0;
+    } else {
+      const maxDate = new Date(
+        Math.max(...recordDates.map((d) => d.getTime()))
+      );
+
+      const isCurrentWeek =
+        maxDate.toDateString() === today.toDateString();
+
+      totalDays = isCurrentWeek
+        ? today.getDay() + 1 // Sunday → Today
+        : 7; // Past weeks → full week
+    }
   } else {
-    // Month: 1 → Today
-    totalDays = today.getDate();
+    if (recordDates.length === 0) {
+      totalDays = 0;
+    } else {
+      const maxDate = new Date(
+        Math.max(...recordDates.map((d) => d.getTime()))
+      );
+
+      const isCurrentMonth =
+        maxDate.getMonth() === today.getMonth() &&
+        maxDate.getFullYear() === today.getFullYear();
+
+      totalDays = isCurrentMonth
+        ? today.getDate()
+        : new Date(
+            maxDate.getFullYear(),
+            maxDate.getMonth() + 1,
+            0
+          ).getDate();
+    }
   }
 
   const maxTotalMarks = totalDays * DAILY_TOTAL;
@@ -128,9 +159,7 @@ export default function SadhanaMatrixTable({
         <thead className="bg-yellow-100 sticky top-0 z-10">
           <tr>
             <th className="p-2 border">Name</th>
-            <th className="p-2 border">
-              Days ({totalDays})
-            </th>
+            <th className="p-2 border">Days ({totalDays})</th>
             {[...SOUL_KEYS, ...BODY_KEYS].map((k) => (
               <th key={k.key} className="p-2 border">
                 {k.label}
