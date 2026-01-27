@@ -14,8 +14,9 @@ import BackPageName from "@/components/BackHeaderButton";
  CONSTANTS
 ===================== */
 
-const MEET_CODE = "pzr-iofu-spb";
-const MEET_URL = `https://meet.google.com/${MEET_CODE}`;
+
+const MEET_URL = "https://meet.google.com/pzr-iofu-spb";
+
 
 /* =====================
  HELPERS
@@ -28,21 +29,21 @@ const MEET_URL = `https://meet.google.com/${MEET_CODE}`;
  * - Desktop → Browser
  * - PWA → breaks out to browser
  */
-function openMeetInBrowser() {
-  const ua = navigator.userAgent || "";
+// function openMeetInBrowser() {
+//   const ua = navigator.userAgent || "";
 
-  // ANDROID (forces Chrome / Meet app if installed)
-  if (/Android/i.test(ua)) {
-    window.location.href =
-      `intent://meet.google.com/${MEET_CODE}` +
-      `#Intent;scheme=https;package=com.google.android.apps.meetings;end`;
-    return;
-  }
+//   // ANDROID (forces Chrome / Meet app if installed)
+//   if (/Android/i.test(ua)) {
+//     window.location.href =
+//       `intent://meet.google.com/${MEET_CODE}` +
+//       `#Intent;scheme=https;package=com.google.android.apps.meetings;end`;
+//     return;
+//   }
 
-  // iOS / Desktop / PWA
-  // target=_blank breaks out of PWA to browser
-  window.open(MEET_URL, "_blank", "noopener,noreferrer");
-}
+//   // iOS / Desktop / PWA
+//   // target=_blank breaks out of PWA to browser
+//   window.open(MEET_URL, "_blank", "noopener,noreferrer");
+// }
 
 /* =====================
  PAGE
@@ -93,7 +94,7 @@ export default function SadhanaHomePage() {
 
         {/* JOIN BOOK READING — CENTERED PRIMARY CTA */}
         <div className="mt-6 flex justify-center">
-          <JoinMeetCard onClick={openMeetInBrowser} />
+          <JoinMeetCard  />
         </div>
       </div>
     </div>
@@ -142,10 +143,12 @@ function Card({
  JOIN MEET CARD (PRIMARY CTA)
 ===================== */
 
-function JoinMeetCard({ onClick }: { onClick: () => void }) {
+export function JoinMeetCard() {
   return (
-    <button
-      onClick={onClick}
+    <a
+      href={MEET_URL}
+      target="_blank"
+      rel="noopener noreferrer"
       className="
         w-full max-w-sm
         bg-green-600
@@ -167,11 +170,14 @@ function JoinMeetCard({ onClick }: { onClick: () => void }) {
       </div>
 
       <div className="text-left">
-        <div className="font-bold text-lg">Join Book Reading</div>
+        <div className="font-bold text-lg">
+          Join Book Reading
+        </div>
         <div className="text-sm text-green-100">
-          Opens in Google Meet / Browser
+          Opens Google Meet
         </div>
       </div>
-    </button>
+    </a>
   );
 }
+
