@@ -14,26 +14,28 @@ interface Person {
   uid: string;
   name: string;
   completed?: boolean;
-  completedAt?: string; // ✅ actual completion time
+  completedAt?: string;
+}
+
+interface SubSection {
+  title: string;
+  time?: string;
+  people: Person[];
 }
 
 interface Section {
   title: string;
-  time?: string; // ✅ FIXED seva time (never changes)
+  time?: string;
   people?: Person[];
-  times?: {
-    Morning?: Person[];
-    Afternoon?: Person[];
-    Evening?: Person[];
-  };
+  subSections?: SubSection[];
 }
 
 interface MySevaItem {
   title: string;
-  slot?: string;
-  sevaTime?: string;        // ✅ scheduled time
+  subTitle?: string;
+  sevaTime?: string;
   completed: boolean;
-  completedAt?: string;    // ✅ actual completed time
+  completedAt?: string;
   source: "daily" | "morning";
 }
 
@@ -63,24 +65,18 @@ export default function MySevaPage() {
   useEffect(() => {
     if (!user) return;
 
-    const loadSeva = async () => {
+    const load = async () => {
       const date = todayKey();
 
-      /* DAILY SEVA */
       const dailySnap = await getDoc(
         doc(db, "dailySevaBoardAllotments", date)
       );
       if (dailySnap.exists()) {
         setDailySeva(
-          extractMySeva(
-            dailySnap.data()?.sections ?? [],
-            user.uid,
-            "daily"
-          )
+          extractMySeva(dailySnap.data()?.sections ?? [], user.uid, "daily")
         );
       }
 
-      /* MORNING PROGRAM */
       const morningSnap = await getDoc(
         doc(db, "morningProgramAllotments", date)
       );
@@ -97,18 +93,20 @@ export default function MySevaPage() {
       setLoading(false);
     };
 
-    loadSeva();
+    load();
   }, [user]);
 
   /* =====================
-   MARK COMPLETE (ONLY updates completedAt)
+   MARK COMPLETE
   ===================== */
 
   const markComplete = async (item: MySevaItem) => {
     if (!user) return;
 
     const ok = confirm(
-      `Mark "${item.title}${item.slot ? ` (${item.slot})` : ""}" as completed?`
+      `Mark "${item.title}${
+        item.subTitle ? ` - ${item.subTitle}` : ""
+      }" as completed?`
     );
     if (!ok) return;
 
@@ -128,43 +126,45 @@ export default function MySevaPage() {
     sections.forEach((sec) => {
       if (sec.title !== item.title) return;
 
-      /* PEOPLE BASED */
+      /* MAIN SEVA */
       sec.people?.forEach((p) => {
-        if (p.uid === user.uid) {
+        if (!item.subTitle && p.uid === user.uid) {
           p.completed = true;
           p.completedAt = nowISO();
         }
       });
 
-      /* SLOT BASED */
-      if (sec.times && item.slot) {
-        sec.times[item.slot as keyof typeof sec.times]?.forEach((p) => {
+      /* SUB SECTION SEVA */
+      sec.subSections?.forEach((sub) => {
+        if (sub.title !== item.subTitle) return;
+
+        sub.people.forEach((p) => {
           if (p.uid === user.uid) {
             p.completed = true;
             p.completedAt = nowISO();
           }
         });
-      }
+      });
     });
 
     await updateDoc(ref, { sections });
 
-    const updateUI = (list: MySevaItem[]) =>
+    const update = (list: MySevaItem[]) =>
       list.map((s) =>
-        s.title === item.title && s.slot === item.slot
+        s.title === item.title && s.subTitle === item.subTitle
           ? { ...s, completed: true, completedAt: nowISO() }
           : s
       );
 
     item.source === "daily"
-      ? setDailySeva(updateUI)
-      : setMorningSeva(updateUI);
+      ? setDailySeva(update)
+      : setMorningSeva(update);
   };
 
   if (loading) {
     return (
       <div className="text-center py-10 text-yellow-700 font-semibold">
-        Loading your seva...
+        Loading your seva…
       </div>
     );
   }
@@ -177,12 +177,7 @@ export default function MySevaPage() {
         backPageName="Back to Dashboard"
       />
 
-      <SectionBlock
-        title="Daily Seva"
-        items={dailySeva}
-        onComplete={markComplete}
-      />
-
+      <SectionBlock title="Daily Seva" items={dailySeva} onComplete={markComplete} />
       <SectionBlock
         title="Morning Program Seva"
         items={morningSeva}
@@ -193,7 +188,7 @@ export default function MySevaPage() {
 }
 
 /* =====================
- SAFE EXTRACTOR
+ EXTRACTOR (FIXED)
 ===================== */
 
 function extractMySeva(
@@ -209,7 +204,7 @@ function extractMySeva(
       if (p.uid === uid) {
         list.push({
           title: sec.title,
-          sevaTime: sec.time, // ✅ fixed time
+          sevaTime: sec.time,
           completed: !!p.completed,
           completedAt: p.completedAt,
           source,
@@ -217,30 +212,28 @@ function extractMySeva(
       }
     });
 
-    /* SLOT SEVA */
-    if (sec.times) {
-      (["Morning", "Afternoon", "Evening"] as const).forEach((slot) => {
-        sec.times?.[slot]?.forEach((p) => {
-          if (p.uid === uid) {
-            list.push({
-              title: sec.title,
-              slot,
-              sevaTime: sec.time, // ✅ still fixed
-              completed: !!p.completed,
-              completedAt: p.completedAt,
-              source,
-            });
-          }
-        });
+    /* SUB SECTIONS */
+    sec.subSections?.forEach((sub) => {
+      sub.people.forEach((p) => {
+        if (p.uid === uid) {
+          list.push({
+            title: sec.title,
+            subTitle: sub.title,
+            sevaTime: sub.time,
+            completed: !!p.completed,
+            completedAt: p.completedAt,
+            source,
+          });
+        }
       });
-    }
+    });
   });
 
   return list;
 }
 
 /* =====================
- UI BLOCK
+ UI
 ===================== */
 
 function SectionBlock({
@@ -267,24 +260,21 @@ function SectionBlock({
               key={i}
               className="border border-yellow-300 rounded-lg p-3 bg-yellow-50"
             >
-              <p className="font-semibold text-yellow-900">{s.title}</p>
-
-              {s.slot && (
-                <p className="text-xs text-gray-600">⏱ {s.slot}</p>
-              )}
+              <p className="font-semibold text-yellow-900">
+                {s.title}
+                {s.subTitle && (
+                  <span className="text-sm text-gray-600">
+                    {" "}
+                    – {s.subTitle}
+                  </span>
+                )}
+              </p>
 
               {s.sevaTime && (
                 <p className="text-xs text-blue-700">
                   🕒 Seva Time: <strong>{s.sevaTime}</strong>
                 </p>
               )}
-
-              {/* {s.completedAt && (
-                <p className="text-xs text-green-700">
-                  ✅ Completed At:{" "}
-                  {new Date(s.completedAt).toLocaleTimeString()}
-                </p>
-              )} */}
 
               <button
                 disabled={s.completed}
