@@ -28,7 +28,7 @@ export default function BackPageName({
 
             {/* CENTER: Title */}
             <h2 className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-yellow-800">
-                {/* {title} */}
+                {title}
             </h2>
 
             {/* RIGHT: Spacer (keeps title centered) */}

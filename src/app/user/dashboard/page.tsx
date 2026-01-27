@@ -231,12 +231,12 @@ export default function UserDashboard() {
         )}
 
         {/* 📊 REPORTS (CHANGED ICON) */}
-        {features.reports && (
+        {/* {features.reports && (
           <Card
             icon={<HiOutlineDocumentReport />}
             label="Reports"
             onClick={() => router.push("/user/reports")}
-          />)}
+          />)} */}
       </div>
     </div>
   );
