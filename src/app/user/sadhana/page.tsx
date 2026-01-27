@@ -11,24 +11,37 @@ import {
 import BackPageName from "@/components/BackHeaderButton";
 
 /* =====================
+ CONSTANTS
+===================== */
+
+const MEET_CODE = "pzr-iofu-spb";
+const MEET_URL = `https://meet.google.com/${MEET_CODE}`;
+
+/* =====================
  HELPERS
 ===================== */
 
-function openGoogleMeet() {
-  const meetCode = "pzr-iofu-spb";
-
+/**
+ * Opens Google Meet in the best possible way:
+ * - Android → Google Meet app / Chrome
+ * - iOS → Safari / Google Meet app
+ * - Desktop → Browser
+ * - PWA → breaks out to browser
+ */
+function openMeetInBrowser() {
   const ua = navigator.userAgent || "";
 
-  // ANDROID → force open Google Meet app
+  // ANDROID (forces Chrome / Meet app if installed)
   if (/Android/i.test(ua)) {
     window.location.href =
-      `intent://meet.google.com/${meetCode}` +
+      `intent://meet.google.com/${MEET_CODE}` +
       `#Intent;scheme=https;package=com.google.android.apps.meetings;end`;
     return;
   }
 
-  // iOS + Desktop → normal https (Safari/Chrome will hand off correctly)
-  window.location.href = `https://meet.google.com/${meetCode}`;
+  // iOS / Desktop / PWA
+  // target=_blank breaks out of PWA to browser
+  window.open(MEET_URL, "_blank", "noopener,noreferrer");
 }
 
 /* =====================
@@ -78,9 +91,9 @@ export default function SadhanaHomePage() {
           />
         </div>
 
-        {/* JOIN BOOK READING — CENTERED CTA */}
+        {/* JOIN BOOK READING — CENTERED PRIMARY CTA */}
         <div className="mt-6 flex justify-center">
-          <JoinCard onClick={openGoogleMeet} />
+          <JoinMeetCard onClick={openMeetInBrowser} />
         </div>
       </div>
     </div>
@@ -126,10 +139,10 @@ function Card({
 }
 
 /* =====================
- JOIN BOOK READING CARD (PRIMARY CTA)
+ JOIN MEET CARD (PRIMARY CTA)
 ===================== */
 
-function JoinCard({ onClick }: { onClick: () => void }) {
+function JoinMeetCard({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -156,7 +169,7 @@ function JoinCard({ onClick }: { onClick: () => void }) {
       <div className="text-left">
         <div className="font-bold text-lg">Join Book Reading</div>
         <div className="text-sm text-green-100">
-          Live Google Meet
+          Opens in Google Meet / Browser
         </div>
       </div>
     </button>
