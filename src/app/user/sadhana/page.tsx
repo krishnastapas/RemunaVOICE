@@ -11,6 +11,27 @@ import {
 import BackPageName from "@/components/BackHeaderButton";
 
 /* =====================
+ HELPERS
+===================== */
+
+function openGoogleMeet() {
+  const meetCode = "pzr-iofu-spb";
+
+  const ua = navigator.userAgent || "";
+
+  // ANDROID → force open Google Meet app
+  if (/Android/i.test(ua)) {
+    window.location.href =
+      `intent://meet.google.com/${meetCode}` +
+      `#Intent;scheme=https;package=com.google.android.apps.meetings;end`;
+    return;
+  }
+
+  // iOS + Desktop → normal https (Safari/Chrome will hand off correctly)
+  window.location.href = `https://meet.google.com/${meetCode}`;
+}
+
+/* =====================
  PAGE
 ===================== */
 
@@ -59,12 +80,7 @@ export default function SadhanaHomePage() {
 
         {/* JOIN BOOK READING — CENTERED CTA */}
         <div className="mt-6 flex justify-center">
-          <JoinCard
-            onClick={() =>
-              (window.location.href =
-                "https://meet.google.com/pzr-iofu-spb")
-            }
-          />
+          <JoinCard onClick={openGoogleMeet} />
         </div>
       </div>
     </div>
@@ -89,21 +105,28 @@ function Card({
   return (
     <button
       onClick={onClick}
-      className="bg-white border border-yellow-300 rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col items-center text-center"
+      className="
+        bg-white
+        border border-yellow-300
+        rounded-xl
+        p-4
+        shadow-sm
+        hover:shadow-md
+        transition
+        flex flex-col
+        items-center
+        text-center
+      "
     >
       <div className="text-3xl text-yellow-700 mb-2">{icon}</div>
-
-      <div className="font-semibold text-yellow-900 text-sm">
-        {label}
-      </div>
-
+      <div className="font-semibold text-yellow-900 text-sm">{label}</div>
       <div className="text-xs text-gray-500 mt-1">{desc}</div>
     </button>
   );
 }
 
 /* =====================
- JOIN BOOK READING CARD
+ JOIN BOOK READING CARD (PRIMARY CTA)
 ===================== */
 
 function JoinCard({ onClick }: { onClick: () => void }) {
@@ -112,14 +135,18 @@ function JoinCard({ onClick }: { onClick: () => void }) {
       onClick={onClick}
       className="
         w-full max-w-sm
-        bg-green-600 text-white
+        bg-green-600
+        text-white
         rounded-2xl
         p-5
         shadow-lg
         hover:bg-green-700
         hover:shadow-xl
         transition
-        flex items-center gap-4
+        flex
+        items-center
+        gap-4
+        active:scale-[0.98]
       "
     >
       <div className="text-3xl">
@@ -127,9 +154,7 @@ function JoinCard({ onClick }: { onClick: () => void }) {
       </div>
 
       <div className="text-left">
-        <div className="font-bold text-lg">
-          Join Book Reading
-        </div>
+        <div className="font-bold text-lg">Join Book Reading</div>
         <div className="text-sm text-green-100">
           Live Google Meet
         </div>
