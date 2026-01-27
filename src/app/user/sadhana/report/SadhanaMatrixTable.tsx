@@ -202,7 +202,7 @@ export default function SadhanaMatrixTable({
             >
               <tr className="hover:bg-yellow-50">
                 <td className="p-2 font-semibold border">
-                  {d.firstName} {d.lastName ?? ""} Pr
+                  {d.firstName} Pr
                 </td>
 
                 <td className="p-2 text-center font-semibold border">
