@@ -319,14 +319,18 @@ export default function SadhanaFillPage() {
           />
         </Row>
 
-        <Row label="Slept before time">
+        <Row label="Slept before time
+(Working < 10:00 PM
+Student < 9:45 PM)">
           <YesNoToggle
             value={form.sleptBeforeTime}
             onChange={(v) => update("sleptBeforeTime", v)}
           />
         </Row>
 
-        <Row label="Wake up before time">
+        <Row label="Wake up before time
+(Working < 4:00 AM
+Student < 3:45 AM)">
           <YesNoToggle
             value={form.wakeUpBeforeTime}
             onChange={(v) => update("wakeUpBeforeTime", v)}
@@ -337,7 +341,8 @@ export default function SadhanaFillPage() {
         <Row
           label={
             <div className="flex items-center gap-2">
-              Study / Preaching (minutes – daily)
+             Students :Study /
+Working : Preaching (minutes – daily)
               <RuleInfo>
                 <p>Weekly total ≥ 420 → 7 marks</p>
                 <p>360–419 → 6</p>
