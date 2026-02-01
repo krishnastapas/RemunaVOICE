@@ -7,15 +7,17 @@ export interface SadhanaDaily {
 
   japaTime: JapaTime;
 
+  /* SOUL */
   personalHearingMin: number;
   spBookReadingMin: number;
   slokaLearntCount: number;
 
+  /* BODY */
   bookReadingClass: YesNo;
   dayRestBelow30: YesNo;
   sleptBeforeTime: YesNo;
   wakeUpBeforeTime: YesNo;
-  studyOrPreaching1hr: YesNo;
+  studyOrPreachingMin: number; // ✅ CHANGED
 }
 
 export interface Devotee {

@@ -10,24 +10,25 @@ import { Info } from "lucide-react";
 /* ================= TYPES ================= */
 
 type YesNo = 0 | 1;
-type JapaTime = 0 | 1 | 2; // 2=before 10, 1=before 1, 0=no
+type JapaTime = 0 | 1 | 2;
 
 interface SadhanaDaily {
   userId: string;
   date: string;
 
-  // DAILY SELECT
+  // SOUL
   japaTime: JapaTime;
   bookReadingClass: YesNo;
-  dayRestBelow30: YesNo;
-  sleptBeforeTime: YesNo;
-  wakeUpBeforeTime: YesNo;
-  studyOrPreaching1hr: YesNo;
 
-  // DAILY NUMBERS
   personalHearingMin: number;
   spBookReadingMin: number;
   slokaLearntCount: number;
+
+  // BODY
+  dayRestBelow30: YesNo;
+  sleptBeforeTime: YesNo;
+  wakeUpBeforeTime: YesNo;
+  studyOrPreachingMin: number; // ✅ CHANGED
 }
 
 /* ================= DEFAULT ================= */
@@ -38,14 +39,15 @@ const defaultForm: SadhanaDaily = {
 
   japaTime: 0,
   bookReadingClass: 0,
-  dayRestBelow30: 0,
-  sleptBeforeTime: 0,
-  wakeUpBeforeTime: 0,
-  studyOrPreaching1hr: 0,
 
   personalHearingMin: 0,
   spBookReadingMin: 0,
   slokaLearntCount: 0,
+
+  dayRestBelow30: 0,
+  sleptBeforeTime: 0,
+  wakeUpBeforeTime: 0,
+  studyOrPreachingMin: 0, // ✅ CHANGED
 };
 
 /* ================= UI HELPERS ================= */
@@ -174,14 +176,12 @@ export default function SadhanaFillPage() {
 
   const docId = user ? `${user.uid}_${date}` : null;
 
-  /* ---------- LOAD ---------- */
+  /* LOAD */
   useEffect(() => {
     if (!user || !docId) return;
 
     const load = async () => {
-      const ref = doc(db, "sadhana_entries", docId);
-      const snap = await getDoc(ref);
-
+      const snap = await getDoc(doc(db, "sadhana_entries", docId));
       if (snap.exists()) {
         setForm(snap.data() as SadhanaDaily);
       } else {
@@ -192,7 +192,7 @@ export default function SadhanaFillPage() {
     load();
   }, [user, docId, date]);
 
-  /* ---------- SAVE ---------- */
+  /* SAVE */
   const save = async () => {
     if (!user || !docId) return;
 
@@ -239,9 +239,7 @@ export default function SadhanaFillPage() {
         />
 
         {/* SOUL */}
-        <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-          🟡 Soul
-        </h2>
+        <h2 className="text-lg font-semibold text-yellow-800 mb-2">🟡 Soul</h2>
 
         <Row label="Japa completed">
           <JapaToggle
@@ -335,10 +333,32 @@ export default function SadhanaFillPage() {
           />
         </Row>
 
-        <Row label="Study / Preaching > 1 hr">
-          <YesNoToggle
-            value={form.studyOrPreaching1hr}
-            onChange={(v) => update("studyOrPreaching1hr", v)}
+        {/* ✅ UPDATED FIELD */}
+        <Row
+          label={
+            <div className="flex items-center gap-2">
+              Study / Preaching (minutes – daily)
+              <RuleInfo>
+                <p>Weekly total ≥ 420 → 7 marks</p>
+                <p>360–419 → 6</p>
+                <p>300–359 → 5</p>
+                <p>240–299 → 4</p>
+                <p>180–239 → 3</p>
+                <p>120–179 → 2</p>
+                <p>60–119 → 1</p>
+                <p>&lt; 60 → 0</p>
+              </RuleInfo>
+            </div>
+          }
+        >
+          <input
+            type="number"
+            min={0}
+            value={form.studyOrPreachingMin}
+            onChange={(e) =>
+              update("studyOrPreachingMin", Number(e.target.value))
+            }
+            className="w-24 border rounded px-2 py-1 text-sm"
           />
         </Row>
 

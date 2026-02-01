@@ -37,6 +37,11 @@ export function calculateWeeklyScore(records: SadhanaDaily[]) {
     0
   );
 
+  const studyMin = records.reduce(
+    (s, r) => s + r.studyOrPreachingMin,
+    0
+  );
+
   const slokaCount = records.reduce(
     (s, r) => s + r.slokaLearntCount,
     0
@@ -44,6 +49,7 @@ export function calculateWeeklyScore(records: SadhanaDaily[]) {
 
   const hearingMarks = weeklyMinuteMarks(hearingMin);
   const readingMarks = weeklyMinuteMarks(readingMin);
+  const studyMarks = weeklyMinuteMarks(studyMin);
   const slokaMarks = weeklySlokaMarks(slokaCount);
 
   const disciplineMarks = records.reduce((s, r) => {
@@ -52,8 +58,7 @@ export function calculateWeeklyScore(records: SadhanaDaily[]) {
       (r.bookReadingClass ? 1 : 0) +
       (r.dayRestBelow30 ? 1 : 0) +
       (r.sleptBeforeTime ? 1 : 0) +
-      (r.wakeUpBeforeTime ? 1 : 0) +
-      (r.studyOrPreaching1hr ? 1 : 0)
+      (r.wakeUpBeforeTime ? 1 : 0)
     );
   }, 0);
 
@@ -66,6 +71,7 @@ export function calculateWeeklyScore(records: SadhanaDaily[]) {
   const total =
     hearingMarks +
     readingMarks +
+    studyMarks +
     slokaMarks +
     disciplineMarks +
     japaMarks;
@@ -73,10 +79,12 @@ export function calculateWeeklyScore(records: SadhanaDaily[]) {
   return {
     hearingMin,
     readingMin,
+    studyMin,
     slokaCount,
 
     hearingMarks,
     readingMarks,
+    studyMarks,
     slokaMarks,
     disciplineMarks,
     japaMarks,

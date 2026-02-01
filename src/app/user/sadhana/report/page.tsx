@@ -45,9 +45,7 @@ export default function WeeklySadhanaReport() {
 
   useEffect(() => {
     const load = async () => {
-      const rSnap = await getDocs(
-        collection(db, "sadhana_entries")
-      );
+      const rSnap = await getDocs(collection(db, "sadhana_entries"));
       setRecords(rSnap.docs.map((d) => d.data() as SadhanaDaily));
 
       const uSnap = await getDocs(collection(db, "devotees"));
@@ -76,8 +74,6 @@ export default function WeeklySadhanaReport() {
     (d) => d.features?.sadhana
   );
 
-  /* 🔒 FULL WEEK CONSTANTS */
-  const FULL_WEEK_DAYS = 7;
   const FULL_SOUL_MAX = 35;
   const FULL_BODY_MAX = 35;
   const FULL_WEEK_TOTAL = 70;
@@ -143,7 +139,7 @@ export default function WeeklySadhanaReport() {
                 <th className="border p-1">Rest</th>
                 <th className="border p-1">Sleep</th>
                 <th className="border p-1">Wake</th>
-                <th className="border p-1">Study</th>
+                <th className="border p-1">Study (min)</th>
                 <th className="border p-1">Body %</th>
               </tr>
             </thead>
@@ -162,7 +158,8 @@ export default function WeeklySadhanaReport() {
                   score.readingMarks +
                   score.slokaMarks;
 
-                const bodyMarks = score.disciplineMarks;
+                const bodyMarks =
+                  score.disciplineMarks + score.studyMarks;
 
                 const soulPct = percent(soulMarks, FULL_SOUL_MAX);
                 const bodyPct = percent(bodyMarks, FULL_BODY_MAX);
@@ -192,62 +189,35 @@ export default function WeeklySadhanaReport() {
                       {score.slokaMarks}/7 ({score.slokaCount})
                     </td>
 
-                    <td
-                      className={`border p-2 text-center font-bold ${colorByPercent(
-                        soulPct
-                      )}`}
-                    >
+                    <td className={`border p-2 text-center font-bold ${colorByPercent(soulPct)}`}>
                       {soulPct}%
                     </td>
 
                     <td className="border p-2 text-center">
-                      {userRecords.reduce(
-                        (s, r) => s + (r.bookReadingClass ? 1 : 0),
-                        0
-                      )}/{FULL_WEEK_DAYS}
+                      {userRecords.reduce((s, r) => s + (r.bookReadingClass ? 1 : 0), 0)}
                     </td>
 
                     <td className="border p-2 text-center">
-                      {userRecords.reduce(
-                        (s, r) => s + (r.dayRestBelow30 ? 1 : 0),
-                        0
-                      )}/{FULL_WEEK_DAYS}
+                      {userRecords.reduce((s, r) => s + (r.dayRestBelow30 ? 1 : 0), 0)}
                     </td>
 
                     <td className="border p-2 text-center">
-                      {userRecords.reduce(
-                        (s, r) => s + (r.sleptBeforeTime ? 1 : 0),
-                        0
-                      )}/{FULL_WEEK_DAYS}
+                      {userRecords.reduce((s, r) => s + (r.sleptBeforeTime ? 1 : 0), 0)}
                     </td>
 
                     <td className="border p-2 text-center">
-                      {userRecords.reduce(
-                        (s, r) => s + (r.wakeUpBeforeTime ? 1 : 0),
-                        0
-                      )}/{FULL_WEEK_DAYS}
+                      {userRecords.reduce((s, r) => s + (r.wakeUpBeforeTime ? 1 : 0), 0)}
                     </td>
 
                     <td className="border p-2 text-center">
-                      {userRecords.reduce(
-                        (s, r) => s + (r.studyOrPreaching1hr ? 1 : 0),
-                        0
-                      )}/{FULL_WEEK_DAYS}
+                      {score.studyMarks}/7 ({score.studyMin}m)
                     </td>
 
-                    <td
-                      className={`border p-2 text-center font-bold ${colorByPercent(
-                        bodyPct
-                      )}`}
-                    >
+                    <td className={`border p-2 text-center font-bold ${colorByPercent(bodyPct)}`}>
                       {bodyPct}%
                     </td>
 
-                    <td
-                      className={`border p-2 text-center font-bold ${colorByPercent(
-                        totalPct
-                      )}`}
-                    >
+                    <td className={`border p-2 text-center font-bold ${colorByPercent(totalPct)}`}>
                       {obtained}/70 ({totalPct}%)
                     </td>
                   </tr>
