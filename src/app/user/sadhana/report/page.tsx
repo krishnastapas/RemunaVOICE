@@ -3,72 +3,58 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import BackHeader from "@/components/BackHeader";
-import SadhanaMatrixTable from "./SadhanaMatrixTable";
-import { getWeekRange } from "./utils";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import BackPageName from "@/components/BackHeaderButton";
+import { SadhanaDaily, Devotee } from "./types";
+import { calculateWeeklyScore } from "./scoring";
 
-/* =====================
- TYPES
-===================== */
+/* ================= UTIL ================= */
 
-interface SadhanaRecord {
-  userId: string;
-  date: string;
-  japaBefore10: 0 | 1 | 2;
-  personalHearing1hr: 0 | 1;
-  spBookReading1hr: 0 | 1;
-  bookReadingAttended: 0 | 1;
-  slokaLearnt: 0 | 1;
-  dayRestBelow30: 0 | 1;
-  sleptBeforeTime: 0 | 1;
-  wakeUpBeforeTime: 0 | 1;
-  studyOrPreaching1hr: 0 | 1;
+function getWeekRange(base: Date) {
+  const d = new Date(base);
+  const day = d.getDay();
+
+  const start = new Date(d);
+  start.setDate(d.getDate() - day);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+
+  return { start, end };
 }
 
-interface Devotee {
-  id: string;
-  firstName: string;
-  lastName?: string;
-  features?: {
-    sadhana?: boolean;
-  };
+function percent(v: number, t: number) {
+  return t === 0 ? 0 : Math.round((v / t) * 100);
 }
 
-/* =====================
- PAGE
-===================== */
+function colorByPercent(p: number) {
+  if (p >= 90) return "bg-green-600 text-white";
+  if (p >= 60) return "bg-yellow-400 text-black";
+  if (p >= 40) return "bg-orange-400 text-black";
+  return "bg-red-600 text-white";
+}
 
-export default function SadhanaReportPage() {
-  const [records, setRecords] = useState<SadhanaRecord[]>([]);
+/* ================= PAGE ================= */
+
+export default function WeeklySadhanaReport() {
+  const [records, setRecords] = useState<SadhanaDaily[]>([]);
   const [devotees, setDevotees] = useState<Devotee[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  /* MODE */
-  const [mode, setMode] = useState<"weekly" | "monthly">("weekly");
-
-  /* WEEK STATE */
   const [weekDate, setWeekDate] = useState(new Date());
-
-  /* MONTH STATE */
-  const [month, setMonth] = useState(new Date().getMonth());
-  const [year, setYear] = useState(new Date().getFullYear());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true);
-
-      const rSnap = await getDocs(collection(db, "sadhana_cards"));
-      setRecords(rSnap.docs.map((d) => d.data() as SadhanaRecord));
+      const rSnap = await getDocs(
+        collection(db, "sadhana_entries")
+      );
+      setRecords(rSnap.docs.map((d) => d.data() as SadhanaDaily));
 
       const uSnap = await getDocs(collection(db, "devotees"));
       setDevotees(
         uSnap.docs.map((d) => ({
           id: d.id,
           firstName: d.data().firstName || "Devotee",
-          lastName: d.data().lastName,
           features: d.data().features || {},
         }))
       );
@@ -79,127 +65,197 @@ export default function SadhanaReportPage() {
     load();
   }, []);
 
-  /* WEEK FILTER */
   const { start, end } = getWeekRange(weekDate);
+
   const weeklyRecords = records.filter((r) => {
     const d = new Date(r.date);
     return d >= start && d <= end;
   });
 
-  /* MONTH FILTER */
-  const monthlyRecords = records.filter((r) => {
-    const d = new Date(r.date);
-    return d.getMonth() === month && d.getFullYear() === year;
-  });
+  const eligibleDevotees = devotees.filter(
+    (d) => d.features?.sadhana
+  );
+
+  /* 🔒 FULL WEEK CONSTANTS */
+  const FULL_WEEK_DAYS = 7;
+  const FULL_SOUL_MAX = 35;
+  const FULL_BODY_MAX = 35;
+  const FULL_WEEK_TOTAL = 70;
 
   return (
     <div className="p-4 space-y-4">
-      {/* <BackHeader title="Sadhana Report" /> */}
-      <BackPageName title="Sadhana Report" link="/user/sadhana"/>
+      <BackPageName
+        title="Weekly Sadhana Report"
+        link="/user/sadhana"
+      />
 
-      {/* MODE SWITCH */}
-      <div className="flex justify-center gap-2">
+      {/* WEEK NAV */}
+      <div className="flex justify-center gap-4">
         <button
-          onClick={() => setMode("weekly")}
-          className={`px-4 py-1 rounded font-semibold text-sm ${
-            mode === "weekly"
-              ? "bg-yellow-700 text-white"
-              : "border text-yellow-800"
-          }`}
+          onClick={() =>
+            setWeekDate(
+              new Date(weekDate.getTime() - 7 * 86400000)
+            )
+          }
+          className="border px-3 py-1 rounded"
         >
-          Weekly Sadhana
+          ◀ Prev
         </button>
 
+        <span className="font-semibold text-sm">
+          {start.toLocaleDateString("en-IN")} –{" "}
+          {end.toLocaleDateString("en-IN")}
+        </span>
+
         <button
-          onClick={() => setMode("monthly")}
-          className={`px-4 py-1 rounded font-semibold text-sm ${
-            mode === "monthly"
-              ? "bg-yellow-700 text-white"
-              : "border text-yellow-800"
-          }`}
+          onClick={() =>
+            setWeekDate(
+              new Date(weekDate.getTime() + 7 * 86400000)
+            )
+          }
+          className="border px-3 py-1 rounded"
         >
-          Monthly Sadhana
+          Next ▶
         </button>
       </div>
 
-      {/* WEEK CONTROLS */}
-      {mode === "weekly" && (
-        <div className="flex justify-center items-center gap-4">
-          <button
-            onClick={() =>
-              setWeekDate(
-                new Date(weekDate.getTime() - 7 * 86400000)
-              )
-            }
-            className="border px-3 py-1 rounded"
-          >
-            ◀ Prev
-          </button>
-
-          <span className="font-semibold text-sm">
-            {start.toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-            })}{" "}
-            –{" "}
-            {end.toLocaleDateString("en-IN", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-            })}
-          </span>
-
-          <button
-            onClick={() =>
-              setWeekDate(
-                new Date(weekDate.getTime() + 7 * 86400000)
-              )
-            }
-            className="border px-3 py-1 rounded"
-          >
-            Next ▶
-          </button>
-        </div>
-      )}
-
-      {/* MONTH CONTROLS */}
-      {mode === "monthly" && (
-        <div className="flex justify-center gap-3">
-          <select
-            value={month}
-            onChange={(e) => setMonth(Number(e.target.value))}
-            className="border px-2 py-1 rounded"
-          >
-            {Array.from({ length: 12 }).map((_, i) => (
-              <option key={i} value={i}>
-                {new Date(2024, i).toLocaleString("en-IN", {
-                  month: "long",
-                })}
-              </option>
-            ))}
-          </select>
-
-          <select
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value))}
-            className="border px-2 py-1 rounded"
-          >
-            {[year - 1, year, year + 1].map((y) => (
-              <option key={y}>{y}</option>
-            ))}
-          </select>
-        </div>
-      )}
-
       {/* TABLE */}
       {loading ? (
-        <p className="text-center text-yellow-700">Loading…</p>
+        <p className="text-center">Loading…</p>
       ) : (
-        <SadhanaMatrixTable
-          records={mode === "weekly" ? weeklyRecords : monthlyRecords}
-          devotees={devotees}
-          weekMode={mode === "weekly"}
-        />
+        <div className="overflow-auto">
+          <table className="min-w-full text-xs border">
+            <thead className="bg-yellow-100">
+              <tr>
+                <th rowSpan={2} className="border p-2">Name</th>
+                <th colSpan={5} className="border p-2 bg-yellow-200">🟡 Soul</th>
+                <th colSpan={6} className="border p-2 bg-green-200">🟢 Body</th>
+                <th rowSpan={2} className="border p-2 bg-green-300">Total</th>
+              </tr>
+              <tr>
+                <th className="border p-1">Japa</th>
+                <th className="border p-1">Hearing</th>
+                <th className="border p-1">SP Book</th>
+                <th className="border p-1">Sloka</th>
+                <th className="border p-1">Soul %</th>
+
+                <th className="border p-1">Class</th>
+                <th className="border p-1">Rest</th>
+                <th className="border p-1">Sleep</th>
+                <th className="border p-1">Wake</th>
+                <th className="border p-1">Study</th>
+                <th className="border p-1">Body %</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {eligibleDevotees.map((d) => {
+                const userRecords = weeklyRecords.filter(
+                  (r) => r.userId === d.id
+                );
+
+                const score = calculateWeeklyScore(userRecords);
+
+                const soulMarks =
+                  score.japaMarks +
+                  score.hearingMarks +
+                  score.readingMarks +
+                  score.slokaMarks;
+
+                const bodyMarks = score.disciplineMarks;
+
+                const soulPct = percent(soulMarks, FULL_SOUL_MAX);
+                const bodyPct = percent(bodyMarks, FULL_BODY_MAX);
+
+                const obtained = soulMarks + bodyMarks;
+                const totalPct = percent(obtained, FULL_WEEK_TOTAL);
+
+                return (
+                  <tr key={d.id} className="hover:bg-yellow-50">
+                    <td className="border p-2 font-semibold">
+                      {d.firstName} Pr
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {score.japaMarks}/14
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {score.hearingMarks}/7 ({score.hearingMin}m)
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {score.readingMarks}/7 ({score.readingMin}m)
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {score.slokaMarks}/7 ({score.slokaCount})
+                    </td>
+
+                    <td
+                      className={`border p-2 text-center font-bold ${colorByPercent(
+                        soulPct
+                      )}`}
+                    >
+                      {soulPct}%
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.bookReadingClass ? 1 : 0),
+                        0
+                      )}/{FULL_WEEK_DAYS}
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.dayRestBelow30 ? 1 : 0),
+                        0
+                      )}/{FULL_WEEK_DAYS}
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.sleptBeforeTime ? 1 : 0),
+                        0
+                      )}/{FULL_WEEK_DAYS}
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.wakeUpBeforeTime ? 1 : 0),
+                        0
+                      )}/{FULL_WEEK_DAYS}
+                    </td>
+
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.studyOrPreaching1hr ? 1 : 0),
+                        0
+                      )}/{FULL_WEEK_DAYS}
+                    </td>
+
+                    <td
+                      className={`border p-2 text-center font-bold ${colorByPercent(
+                        bodyPct
+                      )}`}
+                    >
+                      {bodyPct}%
+                    </td>
+
+                    <td
+                      className={`border p-2 text-center font-bold ${colorByPercent(
+                        totalPct
+                      )}`}
+                    >
+                      {obtained}/70 ({totalPct}%)
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

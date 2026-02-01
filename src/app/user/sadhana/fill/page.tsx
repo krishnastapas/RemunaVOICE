@@ -4,78 +4,74 @@ import { useEffect, useState } from "react";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
-import BackHeader from "@/components/BackHeader";
-import { useRouter } from "next/navigation";
 import BackPageName from "@/components/BackHeaderButton";
+import { Info } from "lucide-react";
 
-/* ---------- TYPES ---------- */
+/* ================= TYPES ================= */
+
 type YesNo = 0 | 1;
+type JapaTime = 0 | 1 | 2; // 2=before 10, 1=before 1, 0=no
 
-// Japa timing
-type JapaTime = 0 | 1 | 2;
-/*
-0 = No
-1 = Before 10 AM
-2 = Before 1 PM
-*/
+interface SadhanaDaily {
+  userId: string;
+  date: string;
 
-interface SadhanaForm {
-  // Soul
-  japaBefore10: JapaTime;
-  personalHearing1hr: YesNo;
-  spBookReading1hr: YesNo;
-  bookReadingAttended: YesNo;
-  slokaLearnt: YesNo;
-
-  // Body
+  // DAILY SELECT
+  japaTime: JapaTime;
+  bookReadingClass: YesNo;
   dayRestBelow30: YesNo;
   sleptBeforeTime: YesNo;
   wakeUpBeforeTime: YesNo;
   studyOrPreaching1hr: YesNo;
+
+  // DAILY NUMBERS
+  personalHearingMin: number;
+  spBookReadingMin: number;
+  slokaLearntCount: number;
 }
 
-/* ---------- DEFAULT ---------- */
-const defaultForm: SadhanaForm = {
-  japaBefore10: 0,
-  personalHearing1hr: 0,
-  spBookReading1hr: 0,
-  bookReadingAttended: 0,
-  slokaLearnt: 0,
+/* ================= DEFAULT ================= */
 
+const defaultForm: SadhanaDaily = {
+  userId: "",
+  date: "",
+
+  japaTime: 0,
+  bookReadingClass: 0,
   dayRestBelow30: 0,
   sleptBeforeTime: 0,
   wakeUpBeforeTime: 0,
   studyOrPreaching1hr: 0,
+
+  personalHearingMin: 0,
+  spBookReadingMin: 0,
+  slokaLearntCount: 0,
 };
 
-/* ---------- YES / NO ---------- */
+/* ================= UI HELPERS ================= */
+
 function YesNoToggle({
   value,
   onChange,
-  disabled,
 }: {
   value: YesNo;
   onChange: (v: YesNo) => void;
-  disabled?: boolean;
 }) {
   return (
     <div className="flex gap-2">
       <button
-        type="button"
-        disabled={disabled}
         onClick={() => onChange(0)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
-          }`}
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
+        }`}
       >
         No
       </button>
-
       <button
-        type="button"
-        disabled={disabled}
         onClick={() => onChange(1)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
-          }`}
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
+        }`}
       >
         Yes
       </button>
@@ -83,44 +79,36 @@ function YesNoToggle({
   );
 }
 
-/* ---------- JAPA TOGGLE ---------- */
 function JapaToggle({
   value,
   onChange,
-  disabled,
 }: {
   value: JapaTime;
   onChange: (v: JapaTime) => void;
-  disabled?: boolean;
 }) {
   return (
     <div className="flex gap-2 flex-wrap">
       <button
-        type="button"
-        disabled={disabled}
-        onClick={() => onChange(1)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${value === 1 ? "bg-green-600 text-white" : "bg-gray-200"
-          }`}
+        onClick={() => onChange(2)}
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          value === 2 ? "bg-green-600 text-white" : "bg-gray-200"
+        }`}
       >
         Before 10 AM
       </button>
-
       <button
-        type="button"
-        disabled={disabled}
-        onClick={() => onChange(2)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${value === 2 ? "bg-yellow-600 text-white" : "bg-gray-200"
-          }`}
+        onClick={() => onChange(1)}
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          value === 1 ? "bg-yellow-600 text-white" : "bg-gray-200"
+        }`}
       >
         Before 1 PM
       </button>
-
       <button
-        type="button"
-        disabled={disabled}
         onClick={() => onChange(0)}
-        className={`px-3 py-1 rounded text-sm font-semibold ${value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
-          }`}
+        className={`px-3 py-1 rounded text-sm font-semibold ${
+          value === 0 ? "bg-red-600 text-white" : "bg-gray-200"
+        }`}
       >
         No
       </button>
@@ -128,33 +116,60 @@ function JapaToggle({
   );
 }
 
-/* ---------- ROW ---------- */
+function RuleInfo({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Info
+        size={16}
+        className="cursor-pointer text-gray-500"
+        onClick={() => setOpen(true)}
+      />
+
+      {open && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 max-w-sm w-full">
+            <h3 className="font-semibold mb-2">Weekly Marks Rule</h3>
+            <div className="text-sm space-y-1">{children}</div>
+            <button
+              onClick={() => setOpen(false)}
+              className="mt-3 w-full bg-yellow-700 text-white py-1 rounded"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 function Row({
   label,
   children,
 }: {
-  label: string;
+  label: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex justify-between items-center border-b py-2 gap-4">
-      <span className="text-sm whitespace-pre-line">{label}</span>
+      <div className="text-sm">{label}</div>
       {children}
     </div>
   );
 }
 
-/* ---------- PAGE ---------- */
-export default function SadhanaPage() {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
+/* ================= PAGE ================= */
+
+export default function SadhanaFillPage() {
+  const { user, loading } = useAuth();
 
   const [date, setDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const [form, setForm] = useState<SadhanaForm>(defaultForm);
+  const [form, setForm] = useState<SadhanaDaily>(defaultForm);
   const [saving, setSaving] = useState(false);
-  const [dateLoading, setDateLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   const docId = user ? `${user.uid}_${date}` : null;
@@ -163,84 +178,64 @@ export default function SadhanaPage() {
   useEffect(() => {
     if (!user || !docId) return;
 
-    let active = true;
+    const load = async () => {
+      const ref = doc(db, "sadhana_entries", docId);
+      const snap = await getDoc(ref);
 
-    const loadData = async () => {
-      setDateLoading(true);
-      try {
-        const ref = doc(db, "sadhana_cards", docId);
-        const snap = await getDoc(ref);
-
-        if (!active) return;
-
-        setForm(
-          snap.exists()
-            ? (snap.data() as SadhanaForm)
-            : defaultForm
-        );
-      } finally {
-        if (active) setDateLoading(false);
+      if (snap.exists()) {
+        setForm(snap.data() as SadhanaDaily);
+      } else {
+        setForm({ ...defaultForm, userId: user.uid, date });
       }
     };
 
-    loadData();
-    return () => {
-      active = false;
-    };
-  }, [docId, user]);
+    load();
+  }, [user, docId, date]);
 
   /* ---------- SAVE ---------- */
-  const saveSadhana = async () => {
+  const save = async () => {
     if (!user || !docId) return;
 
     setSaving(true);
     setMessage("");
 
-    try {
-      await setDoc(
-        doc(db, "sadhana_cards", docId),
-        {
-          userId: user.uid,
-          date,
-          ...form,
-          updatedAt: serverTimestamp(),
-          createdAt: serverTimestamp(),
-        },
-        { merge: true }
-      );
-      setMessage("✅ Sadhana saved successfully");
-    } catch {
-      setMessage("❌ Failed to save sadhana");
-    } finally {
-      setSaving(false);
-    }
+    await setDoc(
+      doc(db, "sadhana_entries", docId),
+      {
+        ...form,
+        userId: user.uid,
+        date,
+        updatedAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    setSaving(false);
+    setMessage("✅ Sadhana saved");
   };
 
-  /* ✅ FIXED TYPE (NO any) */
-  const update = (
-    key: keyof SadhanaForm,
-    value: YesNo | JapaTime
+  const update = <K extends keyof SadhanaDaily>(
+    key: K,
+    value: SadhanaDaily[K]
   ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((p) => ({ ...p, [key]: value }));
   };
 
-  if (authLoading) return <div className="pt-32 text-center">Loading…</div>;
+  if (loading) return <div className="pt-32 text-center">Loading…</div>;
   if (!user) return <div className="pt-32 text-center">Please login</div>;
 
   return (
     <div>
-     <BackPageName title="Sadhana Card"  link="/user/sadhana" />
+      <BackPageName title="Sadhana Fill" link="/user/sadhana" />
 
-      <div className="pt-[10px] pb-[90px] px-4 max-w-md mx-auto relative">
-
-        
+      <div className="pt-3 pb-24 px-4 max-w-md mx-auto">
         {/* DATE */}
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className="w-full border rounded px-3 py-2 mb-4"
-          disabled={dateLoading}
         />
 
         {/* SOUL */}
@@ -250,44 +245,67 @@ export default function SadhanaPage() {
 
         <Row label="Japa completed">
           <JapaToggle
-            value={form.japaBefore10}
-            onChange={(v) => update("japaBefore10", v)}
+            value={form.japaTime}
+            onChange={(v) => update("japaTime", v)}
           />
         </Row>
 
-        <Row label="Personal hearing > 1 hour per day">
-          <YesNoToggle
-            value={form.personalHearing1hr}
-            onChange={(v) =>
-              update("personalHearing1hr", v)
+        <Row
+          label={
+            <div className="flex items-center gap-2">
+              Personal hearing (minutes – daily)
+              <RuleInfo>
+                <p>Weekly total ≥ 420 → 7 marks</p>
+                <p>360–419 → 6</p>
+                <p>300–359 → 5</p>
+                <p>240–299 → 4</p>
+                <p>180–239 → 3</p>
+                <p>120–179 → 2</p>
+                <p>60–119 → 1</p>
+                <p>&lt; 60 → 0</p>
+              </RuleInfo>
+            </div>
+          }
+        >
+          <input
+            type="number"
+            min={0}
+            value={form.personalHearingMin}
+            onChange={(e) =>
+              update("personalHearingMin", Number(e.target.value))
             }
+            className="w-24 border rounded px-2 py-1 text-sm"
           />
         </Row>
 
-        <Row label="Read SP book > 1 hour">
-          <YesNoToggle
-            value={form.spBookReading1hr}
-            onChange={(v) =>
-              update("spBookReading1hr", v)
+        <Row label="Read SP book (minutes – daily)">
+          <input
+            type="number"
+            min={0}
+            value={form.spBookReadingMin}
+            onChange={(e) =>
+              update("spBookReadingMin", Number(e.target.value))
             }
+            className="w-24 border rounded px-2 py-1 text-sm"
           />
         </Row>
 
         <Row label="Book reading class attended">
           <YesNoToggle
-            value={form.bookReadingAttended}
-            onChange={(v) =>
-              update("bookReadingAttended", v)
-            }
+            value={form.bookReadingClass}
+            onChange={(v) => update("bookReadingClass", v)}
           />
         </Row>
 
-        <Row label="Sloka learnt">
-          <YesNoToggle
-            value={form.slokaLearnt}
-            onChange={(v) =>
-              update("slokaLearnt", v)
+        <Row label="Sloka learnt (count – daily)">
+          <input
+            type="number"
+            min={0}
+            value={form.slokaLearntCount}
+            onChange={(e) =>
+              update("slokaLearntCount", Number(e.target.value))
             }
+            className="w-20 border rounded px-2 py-1 text-sm"
           />
         </Row>
 
@@ -299,51 +317,41 @@ export default function SadhanaPage() {
         <Row label="Day rest < 30 minutes">
           <YesNoToggle
             value={form.dayRestBelow30}
-            onChange={(v) =>
-              update("dayRestBelow30", v)
-            }
+            onChange={(v) => update("dayRestBelow30", v)}
           />
         </Row>
 
-        <Row label={`Slept before time\n(Working < 10:00 PM\nStudent < 9:45 PM)`}>
+        <Row label="Slept before time">
           <YesNoToggle
             value={form.sleptBeforeTime}
-            onChange={(v) =>
-              update("sleptBeforeTime", v)
-            }
+            onChange={(v) => update("sleptBeforeTime", v)}
           />
         </Row>
 
-        <Row label={`Wake up before time\n(Working < 4:00 AM\nStudent < 3:45 AM)`}>
+        <Row label="Wake up before time">
           <YesNoToggle
             value={form.wakeUpBeforeTime}
-            onChange={(v) =>
-              update("wakeUpBeforeTime", v)
-            }
+            onChange={(v) => update("wakeUpBeforeTime", v)}
           />
         </Row>
 
-        <Row label={`Students (Study) /\nWorking (Preaching) > 1 hr`}>
+        <Row label="Study / Preaching > 1 hr">
           <YesNoToggle
             value={form.studyOrPreaching1hr}
-            onChange={(v) =>
-              update("studyOrPreaching1hr", v)
-            }
+            onChange={(v) => update("studyOrPreaching1hr", v)}
           />
         </Row>
 
         <button
-          onClick={saveSadhana}
-          disabled={saving || dateLoading}
+          onClick={save}
+          disabled={saving}
           className="w-full mt-6 py-2 rounded text-white bg-yellow-700"
         >
           {saving ? "Saving…" : "Save Sadhana"}
         </button>
 
         {message && (
-          <p className="text-center mt-3 font-medium">
-            {message}
-          </p>
+          <p className="text-center mt-3 font-medium">{message}</p>
         )}
       </div>
     </div>

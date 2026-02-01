@@ -3,47 +3,18 @@
 import { useRouter } from "next/navigation";
 import {
   FaPenFancy,
-  FaUserCheck,
   FaChartBar,
   FaBookOpen,
+  FaBookReader,
   FaVideo,
 } from "react-icons/fa";
 import BackPageName from "@/components/BackHeaderButton";
 
 /* =====================
- CONSTANTS
+ CONSTANT
 ===================== */
-
 
 const MEET_URL = "https://meet.google.com/pzr-iofu-spb";
-
-
-/* =====================
- HELPERS
-===================== */
-
-/**
- * Opens Google Meet in the best possible way:
- * - Android → Google Meet app / Chrome
- * - iOS → Safari / Google Meet app
- * - Desktop → Browser
- * - PWA → breaks out to browser
- */
-// function openMeetInBrowser() {
-//   const ua = navigator.userAgent || "";
-
-//   // ANDROID (forces Chrome / Meet app if installed)
-//   if (/Android/i.test(ua)) {
-//     window.location.href =
-//       `intent://meet.google.com/${MEET_CODE}` +
-//       `#Intent;scheme=https;package=com.google.android.apps.meetings;end`;
-//     return;
-//   }
-
-//   // iOS / Desktop / PWA
-//   // target=_blank breaks out of PWA to browser
-//   window.open(MEET_URL, "_blank", "noopener,noreferrer");
-// }
 
 /* =====================
  PAGE
@@ -71,13 +42,6 @@ export default function SadhanaHomePage() {
           />
 
           <Card
-            icon={<FaUserCheck />}
-            label="My Sadhana"
-            desc="My history"
-            onClick={() => router.push("/user/sadhana/my")}
-          />
-
-          <Card
             icon={<FaChartBar />}
             label="Sadhana Report"
             desc="Weekly / Monthly"
@@ -87,14 +51,48 @@ export default function SadhanaHomePage() {
           <Card
             icon={<FaBookOpen />}
             label="SP Book Reading"
-            desc="Reading tracker"
+            desc="Devotee entry"
             onClick={() => router.push("/user/sadhana/book-reading")}
+          />
+
+          <Card
+            icon={<FaBookReader />}
+            label="SP Book Report"
+            desc="Reading status"
+            onClick={() => router.push("/user/sadhana/book-report")}
           />
         </div>
 
-        {/* JOIN BOOK READING — CENTERED PRIMARY CTA */}
+        {/* JOIN BOOK READING — PRIMARY CTA */}
         <div className="mt-6 flex justify-center">
-          <JoinMeetCard  />
+          <a
+            href={MEET_URL}
+            className="
+              w-full max-w-sm
+              bg-green-600 text-white
+              rounded-2xl
+              p-5
+              shadow-lg
+              hover:bg-green-700
+              hover:shadow-xl
+              transition
+              flex items-center gap-4
+              active:scale-[0.98]
+            "
+          >
+            <div className="text-3xl">
+              <FaVideo />
+            </div>
+
+            <div className="text-left">
+              <div className="font-bold text-lg">
+                Join Book Reading
+              </div>
+              <div className="text-sm text-green-100">
+                Opens in Google Meet / Browser
+              </div>
+            </div>
+          </a>
         </div>
       </div>
     </div>
@@ -102,7 +100,7 @@ export default function SadhanaHomePage() {
 }
 
 /* =====================
- NORMAL CARD
+ CARD COMPONENT
 ===================== */
 
 function Card({
@@ -130,54 +128,20 @@ function Card({
         flex flex-col
         items-center
         text-center
+        active:scale-[0.97]
       "
     >
-      <div className="text-3xl text-yellow-700 mb-2">{icon}</div>
-      <div className="font-semibold text-yellow-900 text-sm">{label}</div>
-      <div className="text-xs text-gray-500 mt-1">{desc}</div>
+      <div className="text-3xl text-yellow-700 mb-2">
+        {icon}
+      </div>
+
+      <div className="font-semibold text-yellow-900 text-sm">
+        {label}
+      </div>
+
+      <div className="text-xs text-gray-500 mt-1">
+        {desc}
+      </div>
     </button>
   );
 }
-
-/* =====================
- JOIN MEET CARD (PRIMARY CTA)
-===================== */
-
-export function JoinMeetCard() {
-  return (
-    <a
-      href={MEET_URL}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="
-        w-full max-w-sm
-        bg-green-600
-        text-white
-        rounded-2xl
-        p-5
-        shadow-lg
-        hover:bg-green-700
-        hover:shadow-xl
-        transition
-        flex
-        items-center
-        gap-4
-        active:scale-[0.98]
-      "
-    >
-      <div className="text-3xl">
-        <FaVideo />
-      </div>
-
-      <div className="text-left">
-        <div className="font-bold text-lg">
-          Join Book Reading
-        </div>
-        <div className="text-sm text-green-100">
-          Opens Google Meet
-        </div>
-      </div>
-    </a>
-  );
-}
-
