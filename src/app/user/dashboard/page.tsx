@@ -206,12 +206,7 @@ export default function UserDashboard() {
           onClick={() => router.push("/user/seva-board")}
         />)}
 
-        {/* 🍽️ KITCHEN */}
-        {features.kitchen && (<Card
-          icon={<GiCookingPot />}
-          label="Kitchen"
-          onClick={() => router.push("/user/kitchen")}
-        />)}
+       
 
         {/* 📚 LIBRARY */}
         {features.library && (

@@ -12,7 +12,7 @@ import { db } from "@/lib/firebase";
 
 /* ================= TYPES ================= */
 
-type AdminFeature = "sevaAlot" | "morningProgramAlot";
+type AdminFeature = "sevaAlot" | "morningProgramAlot" | "kitchen";
 
 type UserFeature =
   | "admin"
@@ -59,6 +59,7 @@ const ALL_USER_FEATURES: UserFeature[] = [
 const ALL_ADMIN_FEATURES: AdminFeature[] = [
   "sevaAlot",
   "morningProgramAlot",
+  "kitchen"
 ];
 
 /* ================= PAGE ================= */

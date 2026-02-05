@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import BackHeader from "@/components/BackHeader";
 import { FaHandsHelping } from "react-icons/fa";
-import { GiSunrise } from "react-icons/gi";
+import { GiSunrise, GiCookingPot } from "react-icons/gi";
 import { useAuth } from "@/context/AuthContext";
 
 /* =====================
@@ -23,7 +23,7 @@ export default function UserAdminPage() {
     );
   }
 
-  const adminFeatures = userData.adminFeatures || [];
+  const adminFeatures: string[] = userData.adminFeatures || [];
 
   return (
     <div>
@@ -55,7 +55,7 @@ export default function UserAdminPage() {
             </button>
           )}
 
-          {/* MORNING PROGRAM ALLOT */}
+          {/* MORNING PROGRAM */}
           {adminFeatures.includes("morningProgramAlot") && (
             <button
               onClick={() =>
@@ -68,7 +68,23 @@ export default function UserAdminPage() {
                 Morning Program
               </span>
               <span className="text-xs text-gray-500 text-center mt-1">
-                Manage attendance & access
+                Attendance & access
+              </span>
+            </button>
+          )}
+
+          {/* KITCHEN MODULE */}
+          {adminFeatures.includes("kitchen") && (
+            <button
+              onClick={() => router.push("/user/admin/kitchen")}
+              className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center justify-center hover:shadow-md transition"
+            >
+              <GiCookingPot className="text-3xl text-yellow-700 mb-2" />
+              <span className="font-semibold text-sm text-center">
+                Kitchen
+              </span>
+              <span className="text-xs text-gray-500 text-center mt-1">
+                Menu, raw items & feedback
               </span>
             </button>
           )}
