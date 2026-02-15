@@ -43,6 +43,9 @@ export default function WeeklySadhanaReport() {
   const [weekDate, setWeekDate] = useState(new Date());
   const [loading, setLoading] = useState(true);
 
+  const [selectedDetails, setSelectedDetails] =
+    useState<SadhanaDaily[] | null>(null);
+
   useEffect(() => {
     const load = async () => {
       const rSnap = await getDocs(collection(db, "sadhana_entries"));
@@ -70,9 +73,7 @@ export default function WeeklySadhanaReport() {
     return d >= start && d <= end;
   });
 
-  const eligibleDevotees = devotees.filter(
-    (d) => d.features?.sadhana
-  );
+  const eligibleDevotees = devotees.filter((d) => d.features?.sadhana);
 
   const FULL_SOUL_MAX = 35;
   const FULL_BODY_MAX = 35;
@@ -124,8 +125,10 @@ export default function WeeklySadhanaReport() {
             <thead className="bg-yellow-100">
               <tr>
                 <th rowSpan={2} className="border p-2">Name</th>
-                <th colSpan={5} className="border p-2 bg-yellow-200">🟡 Soul</th>
-                <th colSpan={6} className="border p-2 bg-green-200">🟢 Body</th>
+                <th colSpan={6} className="border p-2 bg-yellow-200">🟡 Soul</th>
+                <th colSpan={5} className="border p-2 bg-green-200">🟢 Body</th>
+                <th rowSpan={2} className="border p-2">Days</th>
+                <th rowSpan={2} className="border p-2">Details</th>
                 <th rowSpan={2} className="border p-2 bg-green-300">Total</th>
               </tr>
               <tr>
@@ -133,13 +136,13 @@ export default function WeeklySadhanaReport() {
                 <th className="border p-1">Hearing</th>
                 <th className="border p-1">SP Book</th>
                 <th className="border p-1">Sloka</th>
+                <th className="border p-1">Class</th>
                 <th className="border p-1">Soul %</th>
 
-                <th className="border p-1">Class</th>
                 <th className="border p-1">Rest</th>
                 <th className="border p-1">Sleep</th>
                 <th className="border p-1">Wake</th>
-                <th className="border p-1">Study (min)</th>
+                <th className="border p-1">Study</th>
                 <th className="border p-1">Body %</th>
               </tr>
             </thead>
@@ -189,12 +192,16 @@ export default function WeeklySadhanaReport() {
                       {score.slokaMarks}/7 ({score.slokaCount})
                     </td>
 
-                    <td className={`border p-2 text-center font-bold ${colorByPercent(soulPct)}`}>
-                      {soulPct}%
+                    {/* CLASS MOVED TO SOUL */}
+                    <td className="border p-2 text-center">
+                      {userRecords.reduce(
+                        (s, r) => s + (r.bookReadingClass ? 1 : 0),
+                        0
+                      )}
                     </td>
 
-                    <td className="border p-2 text-center">
-                      {userRecords.reduce((s, r) => s + (r.bookReadingClass ? 1 : 0), 0)}
+                    <td className={`border p-2 text-center font-bold ${colorByPercent(soulPct)}`}>
+                      {soulPct}%
                     </td>
 
                     <td className="border p-2 text-center">
@@ -217,6 +224,21 @@ export default function WeeklySadhanaReport() {
                       {bodyPct}%
                     </td>
 
+                    {/* NEW: DAYS FILLED */}
+                    <td className="border p-2 text-center font-semibold">
+                      {userRecords.length}/7
+                    </td>
+
+                    {/* NEW: DETAILS BUTTON */}
+                    <td className="border p-2 text-center">
+                      <button
+                        onClick={() => setSelectedDetails(userRecords)}
+                        className="bg-blue-600 text-white px-2 py-1 rounded text-xs"
+                      >
+                        View
+                      </button>
+                    </td>
+
                     <td className={`border p-2 text-center font-bold ${colorByPercent(totalPct)}`}>
                       {obtained}/70 ({totalPct}%)
                     </td>
@@ -225,6 +247,37 @@ export default function WeeklySadhanaReport() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* DETAILS MODAL */}
+      {selectedDetails && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 max-w-lg w-full max-h-[80vh] overflow-auto">
+            <h3 className="font-semibold mb-3">Daily Details</h3>
+
+            {selectedDetails.map((r) => (
+              <div key={r.date} className="border-b py-2 text-sm">
+                <div className="font-semibold">{r.date}</div>
+                <div>Japa: {r.japaTime}</div>
+                <div>Hearing: {r.personalHearingMin}m</div>
+                <div>SP Book: {r.spBookReadingMin}m</div>
+                <div>Sloka: {r.slokaLearntCount}</div>
+                <div>Book Reading: {r.bookReadingClass}</div>
+                <div>Day Rest: {r.bookReadingClass}</div>
+                <div>Wake up : {r.bookReadingClass}</div>
+                <div>Sleep: {r.bookReadingClass}</div>
+                <div>Study: {r.studyOrPreachingMin}m</div>
+              </div>
+            ))}
+
+            <button
+              onClick={() => setSelectedDetails(null)}
+              className="mt-3 w-full bg-yellow-700 text-white py-1 rounded"
+            >
+              Close
+            </button>
+          </div>
         </div>
       )}
     </div>
