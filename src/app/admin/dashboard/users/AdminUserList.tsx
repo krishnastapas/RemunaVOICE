@@ -6,12 +6,26 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
   Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
-/* ---------------- TYPES ---------------- */
+/* ================= TYPES ================= */
+
+type AdminFeature = "sevaAlot" | "morningProgramAlot" | "kitchen";
+
+type UserFeature =
+  | "admin"
+  | "seva"
+  | "sadhana"
+  | "profile"
+  | "preaching"
+  | "morningProgram"
+  | "library"
+  | "kitchen"
+  | "reports"
+  | "sevaBoard";
+
 interface Devotee {
   uid: string;
   firstName?: string;
@@ -19,178 +33,153 @@ interface Devotee {
   email: string;
   phone?: string;
   dob?: string;
-  provider?: string;
   createdAt?: Timestamp;
-  displayName?: string;
+
+  features: Record<UserFeature, boolean>;
+  adminFeatures: AdminFeature[];
 }
 
 type DevoteeDoc = Omit<Devotee, "uid">;
 
-/* ---------------- PAGE ---------------- */
+/* ================= CONSTANTS ================= */
+
+const ALL_USER_FEATURES: UserFeature[] = [
+  "admin",
+  "seva",
+  "sadhana",
+  "profile",
+  "preaching",
+  "morningProgram",
+  "library",
+  "kitchen",
+  "reports",
+  "sevaBoard",
+];
+
+const ALL_ADMIN_FEATURES: AdminFeature[] = [
+  "sevaAlot",
+  "morningProgramAlot",
+  "kitchen"
+];
+
+/* ================= PAGE ================= */
+
 export default function AdminUserList() {
   const [users, setUsers] = useState<Devotee[]>([]);
   const [loading, setLoading] = useState(true);
-
   const [editUser, setEditUser] = useState<Devotee | null>(null);
-  const [deleteUser, setDeleteUser] = useState<Devotee | null>(null);
   const [saving, setSaving] = useState(false);
 
-  /* -------- FETCH USERS -------- */
+  /* ---------- FETCH USERS ---------- */
   useEffect(() => {
     const fetchUsers = async () => {
-      try {
-        const snap = await getDocs(collection(db, "devotees"));
-        setUsers(
-          snap.docs.map((d) => ({
+      const snap = await getDocs(collection(db, "devotees"));
+
+      setUsers(
+        snap.docs.map((d) => {
+          const data = d.data() as DevoteeDoc;
+
+          const normalizedFeatures = ALL_USER_FEATURES.reduce(
+            (acc, f) => {
+              acc[f] = data.features?.[f] ?? false;
+              return acc;
+            },
+            {} as Record<UserFeature, boolean>
+          );
+
+          return {
             uid: d.id,
-            ...(d.data() as DevoteeDoc),
-          }))
-        );
-      } catch (err) {
-        console.error("Error fetching devotees:", err);
-      } finally {
-        setLoading(false);
-      }
+            ...data,
+            features: normalizedFeatures,
+            adminFeatures: data.adminFeatures || [],
+          };
+        })
+      );
+
+      setLoading(false);
     };
+
     fetchUsers();
   }, []);
 
-  /* -------- SAVE EDIT -------- */
+  /* ---------- SAVE EDIT ---------- */
   const handleSaveEdit = async () => {
     if (!editUser) return;
     setSaving(true);
 
-    try {
-      const ref = doc(db, "devotees", editUser.uid);
-      await updateDoc(ref, {
-        firstName: editUser.firstName || "",
-        lastName: editUser.lastName || "",
-        phone: editUser.phone || "",
-        dob: editUser.dob || "",
-      });
+    await updateDoc(doc(db, "devotees", editUser.uid), {
+      firstName: editUser.firstName || "",
+      lastName: editUser.lastName || "",
+      phone: editUser.phone || "",
+      dob: editUser.dob || "",
+      features: editUser.features,
+      adminFeatures: editUser.adminFeatures,
+    });
 
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.uid === editUser.uid ? editUser : u
-        )
-      );
-      setEditUser(null);
-    } catch (err) {
-      console.error("Update failed:", err);
-    } finally {
-      setSaving(false);
-    }
+    setUsers((prev) =>
+      prev.map((u) => (u.uid === editUser.uid ? editUser : u))
+    );
+
+    setEditUser(null);
+    setSaving(false);
   };
 
-  /* -------- CONFIRM DELETE -------- */
-  const confirmDelete = async () => {
-    if (!deleteUser) return;
-    setSaving(true);
-
-    try {
-      await deleteDoc(doc(db, "devotees", deleteUser.uid));
-      setUsers((prev) =>
-        prev.filter((u) => u.uid !== deleteUser.uid)
-      );
-      setDeleteUser(null);
-    } catch (err) {
-      console.error("Delete failed:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  /* -------- LOADING -------- */
+  /* ---------- LOADING ---------- */
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center py-10">
-        <div className="h-8 w-8 border-4 border-yellow-700 border-t-transparent rounded-full animate-spin mb-2"></div>
-        <p className="text-yellow-700 font-medium">
-          Loading devotees...
-        </p>
+      <div className="text-center py-10 text-yellow-700 font-semibold">
+        Loading devotees...
       </div>
     );
 
-  if (users.length === 0)
-    return (
-      <div className="text-center py-10 text-yellow-800 font-semibold">
-        No devotees registered yet 🙏
-      </div>
-    );
-
-  /* -------- UI -------- */
+  /* ---------- UI ---------- */
   return (
-    <div className="bg-white p-6 rounded-xl shadow-lg border border-yellow-300 overflow-x-auto">
+    <div className="bg-white p-6 rounded-xl shadow border border-yellow-300">
       <h2 className="text-2xl font-bold mb-4 text-yellow-800 text-center">
         Registered Devotees
       </h2>
 
-      <table className="min-w-full text-sm border border-yellow-200">
+      <table className="min-w-full text-sm border">
         <thead className="bg-yellow-700 text-white">
           <tr>
-            <th className="py-2 px-3">Name</th>
-            <th className="py-2 px-3">Email</th>
-            <th className="py-2 px-3">Phone</th>
-            <th className="py-2 px-3">DOB</th>
-            <th className="py-2 px-3">Provider</th>
-            <th className="py-2 px-3">Registered</th>
-            <th className="py-2 px-3 text-center">Actions</th>
+            <th className="p-2">Name</th>
+            <th className="p-2">Email</th>
+            <th className="p-2">Features</th>
+            <th className="p-2">Admin Access</th>
+            <th className="p-2">Action</th>
           </tr>
         </thead>
         <tbody>
-          {users.map((u, i) => {
-            const fullName =
-              u.firstName || u.lastName || u.displayName
-                ? `${u.firstName || ""} ${
-                    u.lastName || u.displayName || ""
-                  }`.trim()
-                : "-";
-
-            return (
-              <tr
-                key={u.uid}
-                className={`border-t ${
-                  i % 2 === 0 ? "bg-yellow-50" : "bg-white"
-                }`}
-              >
-                <td className="px-3 py-2">{fullName}</td>
-                <td className="px-3 py-2">{u.email}</td>
-                <td className="px-3 py-2">{u.phone || "-"}</td>
-                <td className="px-3 py-2">{u.dob || "-"}</td>
-                <td className="px-3 py-2 capitalize">
-                  {u.provider || "-"}
-                </td>
-                <td className="px-3 py-2">
-                  {u.createdAt
-                    ? u.createdAt.toDate().toLocaleDateString()
-                    : "-"}
-                </td>
-                <td className="px-3 py-2 text-center space-x-2">
-                  <button
-                    onClick={() => setEditUser(u)}
-                    className="text-blue-600 font-semibold"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => setDeleteUser(u)}
-                    className="text-red-600 font-semibold"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
+          {users.map((u, i) => (
+            <tr key={u.uid} className={i % 2 ? "bg-white" : "bg-yellow-50"}>
+              <td className="p-2">
+                {u.firstName} {u.lastName}
+              </td>
+              <td className="p-2">{u.email}</td>
+              <td className="p-2 text-xs">
+                {ALL_USER_FEATURES.filter((f) => u.features[f]).join(", ") ||
+                  "-"}
+              </td>
+              <td className="p-2 text-xs text-blue-700">
+                {u.adminFeatures.join(", ") || "-"}
+              </td>
+              <td className="p-2 text-center">
+                <button
+                  className="text-blue-600 font-semibold"
+                  onClick={() => setEditUser({ ...u })}
+                >
+                  Edit
+                </button>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
-      {/* -------- EDIT MODAL -------- */}
+      {/* ---------- EDIT MODAL ---------- */}
       {editUser && (
         <Modal>
-          <h3 className="font-bold text-lg mb-3">
-            Edit Devotee
-          </h3>
+          <h3 className="font-bold text-lg mb-3">Edit User</h3>
 
           <Input
             label="First Name"
@@ -222,48 +211,53 @@ export default function AdminUserList() {
             }
           />
 
+          {/* USER FEATURES */}
+          <h4 className="font-semibold mt-3">User Features</h4>
+          {ALL_USER_FEATURES.map((f) => (
+            <Checkbox
+              key={f}
+              label={f}
+              checked={editUser.features[f]}
+              onChange={(v) =>
+                setEditUser({
+                  ...editUser,
+                  features: {
+                    ...editUser.features,
+                    [f]: v,
+                  },
+                })
+              }
+            />
+          ))}
+
+          {/* ADMIN FEATURES */}
+          <h4 className="font-semibold mt-3">Admin Permissions</h4>
+          {ALL_ADMIN_FEATURES.map((af) => (
+            <Checkbox
+              key={af}
+              label={af}
+              checked={editUser.adminFeatures.includes(af)}
+              onChange={(v) =>
+                setEditUser({
+                  ...editUser,
+                  adminFeatures: v
+                    ? [...editUser.adminFeatures, af]
+                    : editUser.adminFeatures.filter((x) => x !== af),
+                })
+              }
+            />
+          ))}
+
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleSaveEdit}
               disabled={saving}
               className="bg-yellow-700 text-white px-4 py-2 rounded"
             >
-              {saving ? "Saving..." : "Save"}
+              Save
             </button>
             <button
               onClick={() => setEditUser(null)}
-              className="border px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* -------- DELETE CONFIRM MODAL -------- */}
-      {deleteUser && (
-        <Modal>
-          <h3 className="font-bold text-lg text-red-600 mb-3">
-            Confirm Delete
-          </h3>
-          <p>
-            Are you sure you want to delete{" "}
-            <strong>
-              {deleteUser.firstName || deleteUser.email}
-            </strong>
-            ?
-          </p>
-
-          <div className="flex gap-3 mt-4">
-            <button
-              onClick={confirmDelete}
-              disabled={saving}
-              className="bg-red-600 text-white px-4 py-2 rounded"
-            >
-              {saving ? "Deleting..." : "Yes, Delete"}
-            </button>
-            <button
-              onClick={() => setDeleteUser(null)}
               className="border px-4 py-2 rounded"
             >
               Cancel
@@ -275,13 +269,12 @@ export default function AdminUserList() {
   );
 }
 
-/* ---------------- COMPONENTS ---------------- */
+/* ================= COMPONENTS ================= */
+
 function Modal({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-[380px]">
-        {children}
-      </div>
+      <div className="bg-white p-6 rounded w-[420px]">{children}</div>
     </div>
   );
 }
@@ -298,10 +291,8 @@ function Input({
   type?: string;
 }) {
   return (
-    <div className="mb-3">
-      <label className="block text-sm mb-1">
-        {label}
-      </label>
+    <div className="mb-2">
+      <label className="block text-sm mb-1 capitalize">{label}</label>
       <input
         type={type}
         value={value}
@@ -309,5 +300,26 @@ function Input({
         className="w-full border px-3 py-2 rounded"
       />
     </div>
+  );
+}
+
+function Checkbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-center gap-2 text-sm mb-1 capitalize">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      {label}
+    </label>
   );
 }

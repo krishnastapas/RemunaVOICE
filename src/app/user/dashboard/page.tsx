@@ -1,15 +1,85 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
-import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { useState } from "react";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+/* ICONS */
+import { FaHandsHelping, FaBook, FaClipboardList } from "react-icons/fa";
+import { GiMeditation, GiSunrise, GiCookingPot } from "react-icons/gi";
+import { MdRecordVoiceOver, MdAdminPanelSettings } from "react-icons/md";
+import { HiOutlineDocumentReport } from "react-icons/hi";
+
+/* =====================
+ HELPERS
+===================== */
+
+function isBirthdayToday(dob?: string) {
+  if (!dob) return false;
+  const today = new Date();
+  const d = new Date(dob + "T00:00:00");
+  return (
+    d.getDate() === today.getDate() &&
+    d.getMonth() === today.getMonth()
+  );
+}
+
+/* =====================
+ PAGE
+===================== */
 
 export default function UserDashboard() {
-  const { user, userData, loading } = useAuth();
   const router = useRouter();
+  const { user, userData } = useAuth();
   const [logoutLoading, setLogoutLoading] = useState(false);
+
+  const [birthdayNames, setBirthdayNames] = useState<string[]>([]);
+  const [dailyQuote, setDailyQuote] = useState<{
+    text?: string;
+    imageUrl?: string;
+  } | null>(null);
+
+  /* 🔒 AUTH */
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (!u) router.push("/");
+    });
+    return () => unsub();
+  }, [router]);
+
+  /* 🎂 FETCH BIRTHDAYS */
+  useEffect(() => {
+    const loadBirthdays = async () => {
+      const snap = await getDocs(collection(db, "devotees"));
+      const list: string[] = [];
+
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (isBirthdayToday(data.dob)) {
+          list.push(`${data.firstName || "Devotee"} Pr`);
+        }
+      });
+
+      setBirthdayNames(list);
+    };
+
+    loadBirthdays();
+  }, []);
+
+  /* 📜 DAILY QUOTE */
+  useEffect(() => {
+    const loadQuote = async () => {
+      const res = await fetch("/api/daily-quote");
+      const data = await res.json();
+      setDailyQuote(data.quote);
+    };
+
+    loadQuote();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -21,62 +91,172 @@ export default function UserDashboard() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-yellow-800 font-semibold">
-        Loading your dashboard...
-      </div>
-    );
-  }
+  const features = userData?.features || {};
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-yellow-100 to-yellow-200 flex flex-col">
-      {/* Header */}
-      
-
-      {/* Main Body */}
-      <main className="flex-1 px-4 py-6">
-        <div className="bg-white shadow-lg rounded-2xl p-5 text-center border border-yellow-300">
-          <h2 className="text-xl font-bold text-yellow-800 mb-3">
-            🌸 Welcome to Your Devotee Dashboard
-          </h2>
-
-          <p className="text-gray-700 leading-relaxed">
-            Hare Krishna,{" "}
-            <b>{userData?.firstName || user?.displayName || "Devotee"} Pr</b>!
-            <br />
-            This is your personal space to view your <b>Seva Board</b>, update your
-            <b> Profile</b>, and stay connected with the devotee community.
-          </p>
-
-          <p className="mt-3 text-yellow-800 italic font-medium">
-            “By serving the servants of Krishna, one easily pleases the Lord Himself.”
+    <div>
+      {/* HEADER */}
+      <header className="bg-yellow-700 text-white py-4 px-6 flex justify-between items-center shadow-md">
+        <div>
+          <h1 className="text-lg font-semibold">🪔 Hare Krishna!</h1>
+          <p className="text-sm opacity-90">
+            Welcome,&nbsp;
+            <span className="font-bold capitalize">
+              {userData?.firstName ||
+                user?.displayName?.split(" ")[0] ||
+                "Devotee"}{" "}
+              Pr
+            </span>
           </p>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 grid grid-cols-2 gap-4">
-          <button
-            onClick={() => router.push("/user/seva-board")}
-            className="bg-yellow-700 text-white rounded-xl py-3 font-semibold hover:bg-yellow-800 shadow-md"
-          >
-            🪔 View Seva Board
-          </button>
+        <button
+          onClick={handleLogout}
+          disabled={logoutLoading}
+          className={`px-3 py-1 rounded-lg text-sm font-medium ${logoutLoading
+            ? "bg-gray-400"
+            : "bg-yellow-600 hover:bg-yellow-800"
+            }`}
+        >
+          {logoutLoading ? "Logging out..." : "Logout"}
+        </button>
+      </header>
 
-          <button
-            onClick={() => router.push("/user/profile")}
-            className="bg-yellow-500 text-white rounded-xl py-3 font-semibold hover:bg-yellow-600 shadow-md"
-          >
-            👤 My Profile
-          </button>
+      <h2 className="text-xl font-bold text-yellow-800 my-3 text-center">
+        📿 Dashboard
+      </h2>
+
+      {/* 🎂 BIRTHDAY */}
+      {birthdayNames.length > 0 && (
+        <div className="mx-4 mb-4 bg-pink-50 border border-pink-200 rounded-xl p-4 text-center shadow">
+          <p className="text-lg font-semibold text-pink-700">
+            🎉 Happy Krishna Conscious Birthday 🎂
+          </p>
+          <p className="text-sm text-pink-600 mt-1">
+            {birthdayNames.join(", ")}
+          </p>
+          <p className="text-xs text-gray-600 mt-2">
+            May Śrī Kṛṣṇa bless you with devotion & strength 🙏
+          </p>
         </div>
-      </main>
+      )}
 
-      {/* Footer */}
-      <footer className="text-center py-3 text-sm text-yellow-900">
-        🌼 All Glories to Sri Guru and Sri Gauranga 🌼 <br />
-        <span className="text-xs">C-Cube Seva Portal</span>
-      </footer>
+      {/* 📜 DAILY QUOTE */}
+      {dailyQuote && (
+        <div className="mx-4 mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow text-center">
+          <p className="text-xs text-yellow-700 font-semibold mb-2">
+            🌼 Śrīla Prabhupāda Says
+          </p>
+
+          {dailyQuote.imageUrl && (
+            <img
+              src={dailyQuote.imageUrl}
+              alt="Daily Quote"
+              className="mx-auto mb-3 rounded-lg max-h-56 object-contain"
+            />
+          )}
+
+          {dailyQuote.text && (
+            <p className="text-sm italic text-gray-800">
+              “{dailyQuote.text}”
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* FEATURE GRID */}
+      <div className="grid grid-cols-2 gap-4 px-4 pb-10">
+        {features.seva && (
+          <Card
+            icon={<FaHandsHelping />}
+            label="My Seva"
+            onClick={() => router.push("/user/my-seva")}
+          />
+        )}
+
+        {features.sadhana && (
+          <Card
+            icon={<GiMeditation />}
+            label="Sadhana"
+            onClick={() => router.push("/user/sadhana")}
+          />
+        )}
+
+        {features.preaching && (
+          <Card
+            icon={<MdRecordVoiceOver />}
+            label="Preaching"
+            onClick={() => router.push("/user/preaching")}
+          />
+        )}
+
+        {features.morningProgram && (
+          <Card
+            icon={<GiSunrise />}
+            label="Morning Program"
+            onClick={() => router.push("/user/morning-program")}
+          />
+        )}
+
+        {/* 📋 SEVA BOARD */}
+       {features.sevaBoard && (
+        <Card
+          icon={<FaClipboardList />}
+          label="Seva Board"
+          onClick={() => router.push("/user/seva-board")}
+        />)}
+
+       
+
+        {/* 📚 LIBRARY */}
+        {features.library && (
+          <Card
+            icon={<FaBook />}
+            label="Library"
+            onClick={() => router.push("/user/library")}
+          />)}
+
+        {/* 🛡️ ADMIN */}
+        {features.admin && (
+          <Card
+            icon={<MdAdminPanelSettings />}
+            label="Admin"
+            onClick={() => router.push("/user/admin")}
+          />
+        )}
+
+        {/* 📊 REPORTS (CHANGED ICON) */}
+        {features.reports && (
+          <Card
+            icon={<HiOutlineDocumentReport />}
+            label="Reports"
+            onClick={() => router.push("/user/reports")}
+          />)}
+      </div>
     </div>
+  );
+}
+
+/* =====================
+ CARD
+===================== */
+
+function Card({
+  icon,
+  label,
+  onClick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center hover:shadow-md transition"
+    >
+      <div className="text-3xl text-yellow-700 mb-2">{icon}</div>
+      <span className="font-semibold text-center">{label}</span>
+    </button>
   );
 }

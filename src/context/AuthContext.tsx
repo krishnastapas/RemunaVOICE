@@ -12,12 +12,28 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
 interface UserData {
-  uid: string;
-  firstName: string;
-  lastName: string;
+   uid: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
-  photoURL?: string;
-  role?: string;
+  phone?: string;
+  dob?: string;
+  provider?: string;
+  displayName?: string;
+  features?: {
+    seva?: boolean;
+    sadhana?: boolean;
+    profile?: boolean;
+    sevaAlot?: boolean;
+    preaching?: boolean;
+    morningProgram?: boolean;
+    admin?: boolean;
+    kitchen?: boolean;
+    library?: boolean;
+    reports?: boolean;
+    sevaBoard?: boolean;
+  }
+  adminFeatures?: string[];
 }
 
 interface AuthContextType {
