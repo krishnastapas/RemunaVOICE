@@ -12,7 +12,11 @@ import { db } from "@/lib/firebase";
 
 /* ================= TYPES ================= */
 
-type AdminFeature = "sevaAlot" | "morningProgramAlot" | "kitchen";
+type AdminFeature =
+  | "sevaAlot"
+  | "morningProgramAlot"
+  | "kitchen"
+  | "account"; // ✅ added
 
 type UserFeature =
   | "admin"
@@ -24,7 +28,8 @@ type UserFeature =
   | "library"
   | "kitchen"
   | "reports"
-  | "sevaBoard";
+  | "sevaBoard"
+  | "account"; // ✅ changed to lowercase (recommended)
 
 interface Devotee {
   uid: string;
@@ -54,12 +59,14 @@ const ALL_USER_FEATURES: UserFeature[] = [
   "kitchen",
   "reports",
   "sevaBoard",
+  "account", // ✅ added
 ];
 
 const ALL_ADMIN_FEATURES: AdminFeature[] = [
   "sevaAlot",
   "morningProgramAlot",
-  "kitchen"
+  "kitchen",
+  "account", // ✅ added
 ];
 
 /* ================= PAGE ================= */
