@@ -7,8 +7,10 @@ import {
   doc,
   updateDoc,
   Timestamp,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import AddUser from "./AddUser";
 
 /* ================= TYPES ================= */
 
@@ -70,34 +72,38 @@ export default function AdminUserList() {
   const [editUser, setEditUser] = useState<Devotee | null>(null);
   const [saving, setSaving] = useState(false);
 
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
   /* ---------- FETCH USERS ---------- */
+  const fetchUsers = async () => {
+    const snap = await getDocs(collection(db, "devotees"));
+
+    setUsers(
+      snap.docs.map((d) => {
+        const data = d.data() as DevoteeDoc;
+
+        const normalizedFeatures = ALL_USER_FEATURES.reduce(
+          (acc, f) => {
+            acc[f] = data.features?.[f] ?? false;
+            return acc;
+          },
+          {} as Record<UserFeature, boolean>
+        );
+
+        return {
+          uid: d.id,
+          ...data,
+          features: normalizedFeatures,
+          adminFeatures: data.adminFeatures || [],
+        };
+      })
+    );
+
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      const snap = await getDocs(collection(db, "devotees"));
 
-      setUsers(
-        snap.docs.map((d) => {
-          const data = d.data() as DevoteeDoc;
-
-          const normalizedFeatures = ALL_USER_FEATURES.reduce(
-            (acc, f) => {
-              acc[f] = data.features?.[f] ?? false;
-              return acc;
-            },
-            {} as Record<UserFeature, boolean>
-          );
-
-          return {
-            uid: d.id,
-            ...data,
-            features: normalizedFeatures,
-            adminFeatures: data.adminFeatures || [],
-          };
-        })
-      );
-
-      setLoading(false);
-    };
 
     fetchUsers();
   }, []);
@@ -124,6 +130,23 @@ export default function AdminUserList() {
     setSaving(false);
   };
 
+
+  const handleDeleteUser = async (user: Devotee) => {
+    try {
+      // Delete from Firestore
+      await deleteDoc(doc(db, "devotees", user.uid));
+
+      // Remove from UI
+      setUsers((prev) => prev.filter((u) => u.uid !== user.uid));
+
+      alert("User deleted (Firestore only)");
+
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+
   /* ---------- LOADING ---------- */
   if (loading)
     return (
@@ -135,9 +158,19 @@ export default function AdminUserList() {
   /* ---------- UI ---------- */
   return (
     <div className="bg-white p-6 rounded-xl shadow border border-yellow-300">
-      <h2 className="text-2xl font-bold mb-4 text-yellow-800 text-center">
-        Registered Devotees
-      </h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-2xl font-bold text-yellow-800">
+          Registered Devotees
+        </h2>
+
+        <button
+          type="button"
+          className="text-white bg-[#a16207] hover:bg-yellow-700 focus:ring-4 focus:ring-yellow-300 shadow font-medium rounded text-sm px-4 py-2"
+          onClick={() => setIsModalOpen(true)}
+        >
+          Add Devotee
+        </button>
+      </div>
 
       <table className="min-w-full text-sm border">
         <thead className="bg-yellow-700 text-white">
@@ -265,6 +298,9 @@ export default function AdminUserList() {
           </div>
         </Modal>
       )}
+      {isModalOpen && (
+        <AddUser onClose={() => setIsModalOpen(false)} fetchUsers={fetchUsers} />
+      )}
     </div>
   );
 }
@@ -274,7 +310,7 @@ export default function AdminUserList() {
 function Modal({ children }: { children: React.ReactNode }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-[420px]">{children}</div>
+      <div className="bg-white p-6 rounded  w-[420px] max-h-[90vh] overflow-y-auto relative">{children}</div>
     </div>
   );
 }

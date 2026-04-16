@@ -125,7 +125,7 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Login"}
             </button>
 
-            <button
+            {/* <button
               type="button"
               onClick={() => {
                 setShowForgot(true);
@@ -134,7 +134,7 @@ export default function LoginPage() {
               className="w-full text-sm text-yellow-700 font-semibold hover:underline"
             >
               Forgot Password?
-            </button>
+            </button> */}
           </form>
         ) : (
           <div className="space-y-4">
@@ -175,7 +175,7 @@ export default function LoginPage() {
         )}
 
         {/* REGISTER */}
-        <div className="text-center mt-5 text-sm">
+        {/* <div className="text-center mt-5 text-sm">
           <span className="text-gray-600">New Devotee? </span>
           <button
             onClick={() => router.push("/register")}
@@ -183,12 +183,12 @@ export default function LoginPage() {
           >
             Register Here
           </button>
-        </div>
-      </div>
+        </div> */}
 
       <p className="mt-8 text-xs text-yellow-700 italic text-center">
         “Serve the devotees, and Krishna will serve your heart.” 🌼
       </p>
+      </div>
     </div>
   );
 }

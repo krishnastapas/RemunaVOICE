@@ -96,31 +96,7 @@ export default function UserDashboard() {
   return (
     <div>
       {/* HEADER */}
-      <header className="bg-yellow-700 text-white py-4 px-6 flex justify-between items-center shadow-md">
-        <div>
-          <h1 className="text-lg font-semibold">🪔 Hare Krishna!</h1>
-          <p className="text-sm opacity-90">
-            Welcome,&nbsp;
-            <span className="font-bold capitalize">
-              {userData?.firstName ||
-                user?.displayName?.split(" ")[0] ||
-                "Devotee"}{" "}
-              Pr
-            </span>
-          </p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          disabled={logoutLoading}
-          className={`px-3 py-1 rounded-lg text-sm font-medium ${logoutLoading
-            ? "bg-gray-400"
-            : "bg-yellow-600 hover:bg-yellow-800"
-            }`}
-        >
-          {logoutLoading ? "Logging out..." : "Logout"}
-        </button>
-      </header>
+      
 
       <h2 className="text-xl font-bold text-yellow-800 my-3 text-center">
         📿 Dashboard
