@@ -1,311 +1,222 @@
 "use client";
 
 import { useState, useEffect, FormEvent, ChangeEvent } from "react";
-import { useRouter } from "next/navigation";
-import { auth, db, googleProvider } from "@/lib/firebase";
-import {
-    createUserWithEmailAndPassword,
-    onAuthStateChanged,
-    signInWithPopup,
-    UserCredential,
-} from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { FcGoogle } from "react-icons/fc";
-import { FirebaseError } from "firebase/app";
+import { auth, db } from "@/lib/firebase";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc, collection, getDocs } from "firebase/firestore";
 
+/* ================= CONSTANTS ================= */
 
+const ALL_USER_FEATURES = [
+  "admin",
+  "seva",
+  "sadhana",
+  "profile",
+  "preaching",
+  "morningProgram",
+  "library",
+  "kitchen",
+  "reports",
+  "sevaBoard",
+];
 
-interface RegisterForm {
-    firstName: string;
-    middleName: string;
-    lastName: string;
-    email: string;
-    password: string;
-    confirmPassword: string;
-    phone: string;
-    dob: string;
-}
+const ALL_ADMIN_FEATURES = [
+  "sevaAlot",
+  "morningProgramAlot",
+  "kitchen",
+];
 
+/* ================= COMPONENT ================= */
 
-/* ================= TYPES ================= */
-export default function AddUser({ onClose, fetchUsers }: { onClose: () => void; fetchUsers: () => void }) {
+export default function AddUser({ onClose, fetchUsers }: any) {
+  const [form, setForm] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    phone: "",
+    dob: "",
+    batchId: "",
+  });
 
-    const router = useRouter();
+  const [batches, setBatches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    const [form, setForm] = useState<RegisterForm>({
-        firstName: "",
-        middleName: "",
-        lastName: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-        phone: "",
-        dob: "",
-    });
-    const [loading, setLoading] = useState(false);
-    const [message, setMessage] = useState("");
+  const [features, setFeatures] = useState<Record<string, boolean>>(
+    ALL_USER_FEATURES.reduce((acc, f) => {
+      acc[f] = false;
+      return acc;
+    }, {} as Record<string, boolean>)
+  );
 
-  
-    const handleChange =
-        (field: keyof RegisterForm) => (e: ChangeEvent<HTMLInputElement>) => {
-            setForm((prev) => ({ ...prev, [field]: e.target.value }));
-        };
+  const [adminFeatures, setAdminFeatures] = useState<string[]>([]);
 
-    // 📩 Email registration
-    const handleEmailRegister = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
+  /* FETCH BATCHES */
+  useEffect(() => {
+    const fetch = async () => {
+      const snap = await getDocs(collection(db, "batches"));
+      setBatches(
+        snap.docs.map((d) => ({
+          id: d.id,
+          ...(d.data() as any),
+        }))
+      );
+    };
+    fetch();
+  }, []);
 
-        if (form.password !== form.confirmPassword) {
-            setMessage("❌ Passwords do not match!");
-            return;
-        }
-
-        setLoading(true);
-        setMessage("");
-
-        try {
-            const userCredential: UserCredential = await createUserWithEmailAndPassword(
-                auth,
-                form.email,
-                form.password
-            );
-
-            const user = userCredential.user;
-
-            // register in Firestore
-            await setDoc(doc(db, "devotees", user.uid), {
-                uid: user.uid,
-                firstName: form.firstName,
-                middleName: form.middleName,
-                lastName: form.lastName,
-                email: form.email,
-                phone: form.phone,
-                dob: form.dob,
-                provider: "email",
-                createdAt: new Date(),
-            });
-
-            setMessage("✅ Registered successfully!");
-            
-        } catch (error) {
-            const err = error as FirebaseError;
-            setMessage("❌ " + (err.message || "Registration failed."));
-        } finally {
-            setLoading(false);
-        }
+  const handleChange =
+    (field: string) =>
+    (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setForm({ ...form, [field]: e.target.value });
     };
 
-    // 🌸 Google registration
-    // const handleGoogleRegister = async () => {
-    //   setLoading(true);
-    //   setMessage("");
-    //   try {
-    //     const result = await signInWithPopup(auth, googleProvider);
-    //     const user = result.user;
-    //     const userRef = doc(db, "devotees", user.uid);
-    //     const snap = await getDoc(userRef);
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
 
-    //     // Split displayName into first/middle/last
-    //     const nameParts = (user.displayName || "").trim().split(" ");
-    //     const firstName = nameParts[0] || "";
-    //     const middleName =
-    //       nameParts.length === 3
-    //         ? nameParts[1]
-    //         : nameParts.length > 3
-    //         ? nameParts.slice(1, -1).join(" ")
-    //         : "";
-    //     const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+    if (form.password !== form.confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
 
-    //     if (!snap.exists()) {
-    //       const dob = prompt("Please enter your Date of Birth (YYYY-MM-DD):") || "";
+    setLoading(true);
 
-    //       await setDoc(userRef, {
-    //         uid: user.uid,
-    //         firstName,
-    //         middleName,
-    //         lastName,
-    //         email: user.email,
-    //         photoURL: user.photoURL,
-    //         dob,
-    //         provider: "google",
-    //         createdAt: new Date(),
-    //       });
-    //     }
+    try {
+      const res = await createUserWithEmailAndPassword(
+        auth,
+        form.email,
+        form.password
+      );
 
-    //     setMessage("✅ Registered/Login successful!");
-    //     router.push("/user/dashboard");
-    //   } catch (error) {
-    //     const err = error as FirebaseError;
-    //     console.error("Google register error:", err);
-    //     setMessage("❌ " + (err.message || "Google registration failed."));
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
+      const selected = batches.find((b) => b.id === form.batchId);
 
-    return (
-        <Modal onClose={onClose}>
-            <h2 className="text-2xl sm:text-3xl font-bold text-center text-yellow-800 mb-6">
-                Devotee Registration
-            </h2>
+      await setDoc(doc(db, "devotees", res.user.uid), {
+        uid: res.user.uid,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        phone: form.phone,
+        dob: form.dob,
+        batchId: form.batchId,
+        batchName: selected?.name || "",
+        features,
+        adminFeatures,
+        createdAt: new Date(),
+      });
 
-            <form onSubmit={handleEmailRegister} className="space-y-3">
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="First Name"
-                        value={form.firstName}
-                        onChange={handleChange("firstName")}
-                        required
-                        className="w-1/3 border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Middle Name"
-                        value={form.middleName}
-                        onChange={handleChange("middleName")}
-                        className="w-1/3 border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                    />
-                    <input
-                        type="text"
-                        placeholder="Last Name"
-                        value={form.lastName}
-                        onChange={handleChange("lastName")}
-                        required
-                        className="w-1/3 border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                    />
-                </div>
+      fetchUsers();
+      onClose();
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={form.email}
-                    onChange={handleChange("email")}
-                    required
-                    className="w-full border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                />
+  return (
+    <Modal onClose={onClose}>
+      <h2 className="font-bold text-lg mb-3">Add User</h2>
 
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={form.password}
-                    onChange={handleChange("password")}
-                    required
-                    className="w-full border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                />
+      <form onSubmit={handleSubmit} className="space-y-2">
 
-                <input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={form.confirmPassword}
-                    onChange={handleChange("confirmPassword")}
-                    required
-                    className="w-full border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                />
+        <Input label="First Name" value={form.firstName} onChange={handleChange("firstName")} />
+        <Input label="Last Name" value={form.lastName} onChange={handleChange("lastName")} />
+        <Input label="Email" value={form.email} onChange={handleChange("email")} />
+        <Input label="Password" type="password" value={form.password} onChange={handleChange("password")} />
+        <Input label="Confirm Password" type="password" value={form.confirmPassword} onChange={handleChange("confirmPassword")} />
+        <Input label="Phone" value={form.phone} onChange={handleChange("phone")} />
+        <Input label="DOB" type="date" value={form.dob} onChange={handleChange("dob")} />
 
-                <input
-                    type="tel"
-                    placeholder="Phone Number"
-                    value={form.phone}
-                    onChange={handleChange("phone")}
-                    required
-                    className="w-full border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                />
+        {/* BATCH */}
+        <select
+          value={form.batchId}
+          onChange={handleChange("batchId")}
+          className="w-full border px-2 py-1 rounded"
+        >
+          <option value="">Select Batch</option>
+          {batches.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
 
-                <input
-                    type="date"
-                    value={form.dob}
-                    onChange={handleChange("dob")}
-                    required
-                    className="w-full border border-yellow-400 rounded-lg px-3 py-2 focus:ring-2 focus:ring-yellow-500 text-sm sm:text-base"
-                />
+        {/* FEATURES */}
+        <h4 className="font-semibold mt-2">User Features</h4>
+        {ALL_USER_FEATURES.map((f) => (
+          <Checkbox
+            key={f}
+            label={f}
+            checked={features[f]}
+            onChange={(v:any) => setFeatures({ ...features, [f]: v })}
+          />
+        ))}
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className={`w-full py-2 rounded-lg text-white font-semibold transition text-sm sm:text-base ${loading ? "bg-gray-400" : "bg-yellow-700 hover:bg-yellow-800"
-                        }`}
-                >
-                    {loading ? "Registering..." : "Register"}
-                </button>
-            </form>
+        {/* ADMIN */}
+        <h4 className="font-semibold mt-2">Admin Permissions</h4>
+        {ALL_ADMIN_FEATURES.map((af) => (
+          <Checkbox
+            key={af}
+            label={af}
+            checked={adminFeatures.includes(af)}
+            onChange={(v:any) =>
+              setAdminFeatures(
+                v
+                  ? [...adminFeatures, af]
+                  : adminFeatures.filter((x) => x !== af)
+              )
+            }
+          />
+        ))}
 
-        
-
-            
-
-        </Modal>
-    );
+        <button
+          type="submit"
+          className="bg-yellow-700 text-white px-4 py-2 rounded w-full"
+        >
+          {loading ? "Saving..." : "Save"}
+        </button>
+      </form>
+    </Modal>
+  );
 }
 
+/* UI */
 
-function Modal({
-  children,
-  onClose,
-}: {
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
+function Modal({ children, onClose }: any) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-      <div className="bg-white p-6 rounded w-[420px] relative">
-
-        {/* ❌ CROSS BUTTON */}
-        <button
-          onClick={onClose}
-          className="absolute top-2 right-2 text-gray-600 hover:text-red-600 text-xl font-bold"
-        >
-          ✕
-        </button>
-
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+      <div className="bg-white p-6 rounded w-[400px] relative">
+        <button onClick={onClose} className="absolute right-2 top-2">✕</button>
         {children}
       </div>
     </div>
   );
 }
 
-function Input({
-    label,
-    value,
-    onChange,
-    type = "text",
-}: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    type?: string;
-}) {
-    return (
-        <div className="mb-2">
-            <label className="block text-sm mb-1 capitalize">{label}</label>
-            <input
-                type={type}
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                className="w-full border px-3 py-2 rounded"
-            />
-        </div>
-    );
+function Input({ label, value, onChange, type = "text" }: any) {
+  return (
+    <div>
+      <label className="text-sm">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={onChange}
+        className="w-full border px-2 py-1 rounded"
+      />
+    </div>
+  );
 }
 
-function Checkbox({
-    label,
-    checked,
-    onChange,
-}: {
-    label: string;
-    checked: boolean;
-    onChange: (v: boolean) => void;
-}) {
-    return (
-        <label className="flex items-center gap-2 text-sm mb-1 capitalize">
-            <input
-                type="checkbox"
-                checked={checked}
-                onChange={(e) => onChange(e.target.checked)}
-            />
-            {label}
-        </label>
-    );
+function Checkbox({ label, checked, onChange }: any) {
+  return (
+    <label className="flex gap-2 text-sm">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      {label}
+    </label>
+  );
 }
