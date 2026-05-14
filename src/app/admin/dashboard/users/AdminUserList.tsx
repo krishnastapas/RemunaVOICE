@@ -4,11 +4,12 @@ import { useEffect, useState } from "react";
 import {
   collection,
   getDocs,
+  deleteDoc,
   doc,
-  updateDoc,
-  Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import AddUser from "./AddUser";
+import EditUser from "./EditUser";
 
 /* ================= TYPES ================= */
 
@@ -38,11 +39,9 @@ interface Devotee {
   email: string;
   phone?: string;
   dob?: string;
-  createdAt?: Timestamp;
 
-  features: Record<UserFeature, boolean>;
-  adminFeatures: AdminFeature[];
-}
+  batchId?: string;
+  batchName?: string;
 
 type DevoteeDoc = Omit<Devotee, "uid">;
 
@@ -75,199 +74,191 @@ export default function AdminUserList() {
   const [users, setUsers] = useState<Devotee[]>([]);
   const [loading, setLoading] = useState(true);
   const [editUser, setEditUser] = useState<Devotee | null>(null);
-  const [saving, setSaving] = useState(false);
+  const [viewUser, setViewUser] = useState<Devotee | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [batches, setBatches] = useState<any[]>([]);
 
-  /* ---------- FETCH USERS ---------- */
-  useEffect(() => {
-    const fetchUsers = async () => {
-      const snap = await getDocs(collection(db, "devotees"));
-
-      setUsers(
-        snap.docs.map((d) => {
-          const data = d.data() as DevoteeDoc;
-
-          const normalizedFeatures = ALL_USER_FEATURES.reduce(
-            (acc, f) => {
-              acc[f] = data.features?.[f] ?? false;
-              return acc;
-            },
-            {} as Record<UserFeature, boolean>
-          );
-
-          return {
-            uid: d.id,
-            ...data,
-            features: normalizedFeatures,
-            adminFeatures: data.adminFeatures || [],
-          };
-        })
-      );
-
-      setLoading(false);
-    };
-
-    fetchUsers();
-  }, []);
-
-  /* ---------- SAVE EDIT ---------- */
-  const handleSaveEdit = async () => {
-    if (!editUser) return;
-    setSaving(true);
-
-    await updateDoc(doc(db, "devotees", editUser.uid), {
-      firstName: editUser.firstName || "",
-      lastName: editUser.lastName || "",
-      phone: editUser.phone || "",
-      dob: editUser.dob || "",
-      features: editUser.features,
-      adminFeatures: editUser.adminFeatures,
-    });
-
-    setUsers((prev) =>
-      prev.map((u) => (u.uid === editUser.uid ? editUser : u))
+  /* ---------- FETCH ---------- */
+  const fetchUsers = async () => {
+    const snap = await getDocs(collection(db, "devotees"));
+    setUsers(
+      snap.docs.map((d) => ({
+        uid: d.id,
+        ...(d.data() as any),
+      }))
     );
-
-    setEditUser(null);
-    setSaving(false);
+    setLoading(false);
   };
 
-  /* ---------- LOADING ---------- */
-  if (loading)
-    return (
-      <div className="text-center py-10 text-yellow-700 font-semibold">
-        Loading devotees...
-      </div>
+  const fetchBatches = async () => {
+    const snap = await getDocs(collection(db, "batches"));
+    setBatches(
+      snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as any),
+      }))
     );
+  };
 
-  /* ---------- UI ---------- */
+  useEffect(() => {
+    fetchUsers();
+    fetchBatches();
+  }, []);
+
+  /* ---------- DELETE ---------- */
+  const handleDelete = async (u: Devotee) => {
+    if (!confirm("Delete user?")) return;
+
+    await deleteDoc(doc(db, "devotees", u.uid));
+    setUsers((prev) => prev.filter((x) => x.uid !== u.uid));
+  };
+
+  if (loading) return <div className="p-10">Loading...</div>;
+
   return (
-    <div className="bg-white p-6 rounded-xl shadow border border-yellow-300">
-      <h2 className="text-2xl font-bold mb-4 text-yellow-800 text-center">
-        Registered Devotees
-      </h2>
+    <div className="bg-white p-6 rounded-xl shadow border">
+      <div className="flex justify-between mb-4">
+        <h2 className="text-xl font-bold">Users</h2>
 
-      <table className="min-w-full text-sm border">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="bg-yellow-700 text-white px-4 py-2 rounded"
+        >
+          + Add
+        </button>
+      </div>
+
+      <table className="w-full border text-sm">
         <thead className="bg-yellow-700 text-white">
           <tr>
             <th className="p-2">Name</th>
-            <th className="p-2">Email</th>
-            <th className="p-2">Features</th>
-            <th className="p-2">Admin Access</th>
-            <th className="p-2">Action</th>
+            <th>Email</th>
+            <th>Batch</th>
+            <th>Action</th>
           </tr>
         </thead>
+
         <tbody>
           {users.map((u, i) => (
             <tr key={u.uid} className={i % 2 ? "bg-white" : "bg-yellow-50"}>
               <td className="p-2">
                 {u.firstName} {u.lastName}
               </td>
-              <td className="p-2">{u.email}</td>
-              <td className="p-2 text-xs">
-                {ALL_USER_FEATURES.filter((f) => u.features[f]).join(", ") ||
-                  "-"}
-              </td>
-              <td className="p-2 text-xs text-blue-700">
-                {u.adminFeatures.join(", ") || "-"}
-              </td>
-              <td className="p-2 text-center">
-                <button
-                  className="text-blue-600 font-semibold"
-                  onClick={() => setEditUser({ ...u })}
-                >
-                  Edit
-                </button>
+              <td>{u.email}</td>
+              <td className="text-green-700">{u.batchName || "-"}</td>
+
+              <td>
+                <div className="flex gap-2 justify-center">
+
+                  <button
+                    onClick={() => setViewUser(u)}
+                    className="bg-gray-100 px-2 py-1 rounded"
+                  >
+                    View
+                  </button>
+
+                  <button
+                    onClick={() => setEditUser(u)}
+                    className="bg-blue-100 px-2 py-1 rounded"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(u)}
+                    className="bg-red-100 px-2 py-1 rounded"
+                  >
+                    Delete
+                  </button>
+
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      {/* ---------- EDIT MODAL ---------- */}
-      {editUser && (
-        <Modal>
-          <h3 className="font-bold text-lg mb-3">Edit User</h3>
+      {/* ADD */}
+      {isModalOpen && (
+        <AddUser
+          onClose={() => setIsModalOpen(false)}
+          fetchUsers={fetchUsers}
+        />
+      )}
 
-          <Input
-            label="First Name"
-            value={editUser.firstName || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, firstName: v })
-            }
-          />
-          <Input
-            label="Last Name"
-            value={editUser.lastName || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, lastName: v })
-            }
-          />
-          <Input
-            label="Phone"
-            value={editUser.phone || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, phone: v })
-            }
-          />
-          <Input
-            label="DOB"
-            type="date"
-            value={editUser.dob || ""}
-            onChange={(v) =>
-              setEditUser({ ...editUser, dob: v })
-            }
-          />
+      {/* EDIT */}
+      {editUser && (
+        <EditUser
+          user={editUser}
+          batches={batches}
+          onClose={() => setEditUser(null)}
+          onSuccess={() => {
+            setEditUser(null);
+            fetchUsers();
+          }}
+        />
+      )}
+
+      {/* VIEW */}
+      {viewUser && (
+        <Modal>
+          <h3 className="font-bold text-lg mb-3">User Details</h3>
+
+          <p><b>Name:</b> {viewUser.firstName} {viewUser.lastName}</p>
+          <p><b>Email:</b> {viewUser.email}</p>
+          <p><b>Phone:</b> {viewUser.phone || "-"}</p>
+          <p><b>DOB:</b> {viewUser.dob || "-"}</p>
+          <p><b>Batch:</b> {viewUser.batchName || "-"}</p>
 
           {/* USER FEATURES */}
-          <h4 className="font-semibold mt-3">User Features</h4>
-          {ALL_USER_FEATURES.map((f) => (
-            <Checkbox
-              key={f}
-              label={f}
-              checked={editUser.features[f]}
-              onChange={(v) =>
-                setEditUser({
-                  ...editUser,
-                  features: {
-                    ...editUser.features,
-                    [f]: v,
-                  },
-                })
-              }
-            />
-          ))}
+          <div className="mt-4">
+            <p className="font-semibold mb-1">User Features:</p>
+
+            <div className="flex flex-wrap gap-2">
+              {viewUser.features &&
+                Object.keys(viewUser.features).filter((f) => viewUser.features[f]).length > 0 ? (
+                Object.keys(viewUser.features)
+                  .filter((f) => viewUser.features[f])
+                  .map((f) => (
+                    <span
+                      key={f}
+                      className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs"
+                    >
+                      {f}
+                    </span>
+                  ))
+              ) : (
+                <span className="text-gray-500 text-sm">No features assigned</span>
+              )}
+            </div>
+          </div>
 
           {/* ADMIN FEATURES */}
-          <h4 className="font-semibold mt-3">Admin Permissions</h4>
-          {ALL_ADMIN_FEATURES.map((af) => (
-            <Checkbox
-              key={af}
-              label={af}
-              checked={editUser.adminFeatures.includes(af)}
-              onChange={(v) =>
-                setEditUser({
-                  ...editUser,
-                  adminFeatures: v
-                    ? [...editUser.adminFeatures, af]
-                    : editUser.adminFeatures.filter((x) => x !== af),
-                })
-              }
-            />
-          ))}
+          <div className="mt-4">
+            <p className="font-semibold mb-1">Admin Permissions:</p>
 
-          <div className="flex gap-3 mt-4">
+            <div className="flex flex-wrap gap-2">
+              {viewUser.adminFeatures?.length > 0 ? (
+                viewUser.adminFeatures.map((af) => (
+                  <span
+                    key={af}
+                    className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs"
+                  >
+                    {af}
+                  </span>
+                ))
+              ) : (
+                <span className="text-gray-500 text-sm">No admin access</span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 text-right">
             <button
-              onClick={handleSaveEdit}
-              disabled={saving}
-              className="bg-yellow-700 text-white px-4 py-2 rounded"
+              onClick={() => setViewUser(null)}
+              className="border px-4 py-2 rounded hover:bg-gray-100"
             >
-              Save
-            </button>
-            <button
-              onClick={() => setEditUser(null)}
-              className="border px-4 py-2 rounded"
-            >
-              Cancel
+              Close
             </button>
           </div>
         </Modal>
@@ -276,36 +267,11 @@ export default function AdminUserList() {
   );
 }
 
-/* ================= COMPONENTS ================= */
-
-function Modal({ children }: { children: React.ReactNode }) {
+/* MODAL */
+function Modal({ children }: any) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded w-[420px]">{children}</div>
-    </div>
-  );
-}
-
-function Input({
-  label,
-  value,
-  onChange,
-  type = "text",
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: string;
-}) {
-  return (
-    <div className="mb-2">
-      <label className="block text-sm mb-1 capitalize">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full border px-3 py-2 rounded"
-      />
+    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
+      <div className="bg-white p-6 rounded w-[400px]">{children}</div>
     </div>
   );
 }

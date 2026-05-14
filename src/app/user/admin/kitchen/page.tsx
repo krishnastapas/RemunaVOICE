@@ -18,7 +18,7 @@ export default function KitchenHomePage() {
 
   return (
     <div className="min-h-screen bg-yellow-50">
-      <BackPageName title="Kitchen" link="/user/admin/kitchen" />
+      <BackPageName title="Kitchen" link="/user/admin" />
 
       <div className="max-w-md mx-auto p-4">
         <p className="text-center text-sm text-gray-600 mb-6">
