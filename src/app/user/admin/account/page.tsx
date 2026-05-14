@@ -2,61 +2,59 @@
 
 import { useRouter } from "next/navigation";
 import {
-  FaBoxes,
-  FaUtensils,
-  FaCalendarAlt,
-  FaCommentDots,
+  FaDonate,
+  FaMoneyCheckAlt,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
+
 import BackPageName from "@/components/BackHeaderButton";
 
 /* =====================
  PAGE
 ===================== */
 
-export default function KitchenHomePage() {
+export default function AccountHomePage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-yellow-50">
-      <BackPageName title="Kitchen" link="/user/admin" />
+    <div className="min-h-screen bg-green-50">
+      <BackPageName title="Accounts" link="/user/admin" />
 
       <div className="max-w-md mx-auto p-4">
         <p className="text-center text-sm text-gray-600 mb-6">
-          Plan, prepare and improve prasadam service
+          Manage donations and account activities
         </p>
 
         {/* GRID */}
         <div className="grid grid-cols-2 gap-4">
-          <KitchenCard
-            icon={<FaBoxes />}
-            title="Raw Grocery"
-            desc="Master items list"
+          <AccountCard
+            icon={<FaMoneyCheckAlt />}
+            title="Transactions"
+            desc="All account transactions"
             color="bg-blue-100 text-blue-700"
-            onClick={() => router.push("/user/admin/kitchen/raw-items")}
+            onClick={() =>
+              router.push("/user/admin/account/transactions")
+            }
           />
 
-          <KitchenCard
-            icon={<FaUtensils />}
-            title="Recipes"
-            desc="Items for 10 devotees"
-            color="bg-purple-100 text-purple-700"
-            onClick={() => router.push("/user/admin/kitchen/recipes")}
+          <AccountCard
+            icon={<FaDonate />}
+            title="Donor List"
+            desc="Regular donor details"
+            color="bg-pink-100 text-pink-700"
+            onClick={() =>
+              router.push("/user/admin/accounts/donors")
+            }
           />
 
-          <KitchenCard
-            icon={<FaCalendarAlt />}
-            title="Menu Planner"
-            desc="Date & devotee wise"
-            color="bg-orange-100 text-orange-700"
-            onClick={() => router.push("/user/admin/kitchen/menu")}
-          />
-
-          <KitchenCard
-            icon={<FaCommentDots />}
-            title="Menu Feedback"
-            desc="Taste & quantity"
+          <AccountCard
+            icon={<FaFileInvoiceDollar />}
+            title="Devotee Requests"
+            desc="Transaction requests"
             color="bg-green-100 text-green-700"
-            onClick={() => router.push("/user/admin/kitchen/feedback")}
+            onClick={() =>
+              router.push("/user/admin/accounts/devotee-requests")
+            }
           />
         </div>
       </div>
@@ -68,7 +66,7 @@ export default function KitchenHomePage() {
  CARD COMPONENT
 ===================== */
 
-function KitchenCard({
+function AccountCard({
   icon,
   title,
   desc,
@@ -86,7 +84,7 @@ function KitchenCard({
       onClick={onClick}
       className="
         bg-white
-        border border-yellow-300
+        border border-green-300
         rounded-xl
         p-4
         shadow-sm
@@ -104,7 +102,7 @@ function KitchenCard({
         <span className="text-2xl">{icon}</span>
       </div>
 
-      <div className="font-semibold text-yellow-900 text-sm">
+      <div className="font-semibold text-green-900 text-sm">
         {title}
       </div>
 

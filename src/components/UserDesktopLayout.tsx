@@ -6,7 +6,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import AdminProtectedRoute from "@/components/AdminProtectedRoute";
 
-export default function AdminDashboardLayout({
+export default function UserDashboardLayoutDesktop({
   children,
 }: {
   children: React.ReactNode;
@@ -29,7 +29,7 @@ export default function AdminDashboardLayout({
         {/* 🟡 SIDEBAR */}
         <aside className="w-64 bg-yellow-800 text-white flex flex-col  " >
           <div className="p-4 text-2xl font-bold border-b border-yellow-700 text-center">
-            Admin Panel
+            Devotees Panel
           </div>
 
           <nav className="flex-1 mt-4 space-y-1">
@@ -81,31 +81,6 @@ export default function AdminDashboardLayout({
             >
               👥 Users
             </Link>
-
-
-            <Link
-              href="/admin/dashboard/batches"
-              className={`block px-4 py-2 rounded-r-full transition ${
-                isActive("/admin/dashboard/batches")
-                  ? "bg-yellow-600 font-semibold"
-                  : "hover:bg-yellow-700"
-              }`}
-            >
-              Batches
-            </Link>
-
-
-            <Link
-              href="/admin/dashboard/department"
-              className={`block px-4 py-2 rounded-r-full transition ${
-                isActive("/admin/dashboard/department")
-                  ? "bg-yellow-600 font-semibold"
-                  : "hover:bg-yellow-700"
-              }`}
-            >
-              Department
-            </Link>
-
           </nav>
 
           {/* Logout */}
@@ -136,3 +111,4 @@ export default function AdminDashboardLayout({
     </AdminProtectedRoute>
   );
 }
+

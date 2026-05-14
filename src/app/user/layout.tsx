@@ -1,52 +1,30 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase";
-import { useAuth } from "@/context/AuthContext";
+import SidebarDesktop from "./SidebarDesktop";
+import SidebarMobile from "./SidebarMobile";
 
-export default function UserLayout({
+export default function UserDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const router = useRouter();
-  const { user, userData, loading } = useAuth();
-  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // 🔒 Protect routes
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (!u) router.push("/");
-    });
-    return () => unsub();
-  }, [router]);
+    const checkScreen = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
 
-  const handleLogout = async () => {
-    try {
-      setLogoutLoading(true);
-      await signOut(auth);
-      router.push("/");
-    } finally {
-      setLogoutLoading(false);
-    }
-  };
+    checkScreen();
+    window.addEventListener("resize", checkScreen);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-yellow-800 font-semibold">
-        Loading...
-      </div>
-    );
+    return () => window.removeEventListener("resize", checkScreen);
+  }, []);
+
+  if (isMobile) {
+    return <SidebarMobile>{children}</SidebarMobile>;
   }
 
-  return (
-    <div className="min-h-screen bg-yellow-50 flex flex-col">
-     
-
-      {/* CONTENT */}
-      <main className="flex-grow p-4">{children}</main>
-    </div>
-  );
+  return <SidebarDesktop>{children}</SidebarDesktop>;
 }
