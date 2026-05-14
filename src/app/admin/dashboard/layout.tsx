@@ -94,6 +94,18 @@ export default function AdminDashboardLayout({
               Batches
             </Link>
 
+
+            <Link
+              href="/admin/dashboard/department"
+              className={`block px-4 py-2 rounded-r-full transition ${
+                isActive("/admin/dashboard/department")
+                  ? "bg-yellow-600 font-semibold"
+                  : "hover:bg-yellow-700"
+              }`}
+            >
+              Department
+            </Link>
+
           </nav>
 
           {/* Logout */}
