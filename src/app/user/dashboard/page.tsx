@@ -9,8 +9,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 /* ICONS */
-import { FaHandsHelping, FaBook, FaClipboardList, FaUserCircle } from "react-icons/fa"; // ✅ added FaUserCircle
-import { GiMeditation, GiSunrise } from "react-icons/gi";
+import { FaHandsHelping, FaBook, FaClipboardList } from "react-icons/fa";
+import { GiMeditation, GiSunrise, GiCookingPot } from "react-icons/gi";
 import { MdRecordVoiceOver, MdAdminPanelSettings } from "react-icons/md";
 import { HiOutlineDocumentReport } from "react-icons/hi";
 
@@ -96,32 +96,7 @@ export default function UserDashboard() {
   return (
     <div>
       {/* HEADER */}
-      <header className="bg-yellow-700 text-white py-4 px-6 flex justify-between items-center shadow-md">
-        <div>
-          <h1 className="text-lg font-semibold">🪔 Hare Krishna!</h1>
-          <p className="text-sm opacity-90">
-            Welcome,&nbsp;
-            <span className="font-bold capitalize">
-              {userData?.firstName ||
-                user?.displayName?.split(" ")[0] ||
-                "Devotee"}{" "}
-              Pr
-            </span>
-          </p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          disabled={logoutLoading}
-          className={`px-3 py-1 rounded-lg text-sm font-medium ${
-            logoutLoading
-              ? "bg-gray-400"
-              : "bg-yellow-600 hover:bg-yellow-800"
-          }`}
-        >
-          {logoutLoading ? "Logging out..." : "Logout"}
-        </button>
-      </header>
+      
 
       <h2 className="text-xl font-bold text-yellow-800 my-3 text-center">
         📿 Dashboard
@@ -167,7 +142,6 @@ export default function UserDashboard() {
 
       {/* FEATURE GRID */}
       <div className="grid grid-cols-2 gap-4 px-4 pb-10">
-
         {features.seva && (
           <Card
             icon={<FaHandsHelping />}
@@ -200,22 +174,25 @@ export default function UserDashboard() {
           />
         )}
 
-        {features.sevaBoard && (
-          <Card
-            icon={<FaClipboardList />}
-            label="Seva Board"
-            onClick={() => router.push("/user/seva-board")}
-          />
-        )}
+        {/* 📋 SEVA BOARD */}
+       {features.sevaBoard && (
+        <Card
+          icon={<FaClipboardList />}
+          label="Seva Board"
+          onClick={() => router.push("/user/seva-board")}
+        />)}
 
+       
+
+        {/* 📚 LIBRARY */}
         {features.library && (
           <Card
             icon={<FaBook />}
             label="Library"
             onClick={() => router.push("/user/library")}
-          />
-        )}
+          />)}
 
+        {/* 🛡️ ADMIN */}
         {features.admin && (
           <Card
             icon={<MdAdminPanelSettings />}
@@ -224,23 +201,13 @@ export default function UserDashboard() {
           />
         )}
 
-        {/* ✅ ACCOUNT ADDED */}
-        {features.account && (
-          <Card
-            icon={<FaUserCircle />}
-            label="Account"
-            onClick={() => router.push("/user/account")}
-          />
-        )}
-
+        {/* 📊 REPORTS (CHANGED ICON) */}
         {features.reports && (
           <Card
             icon={<HiOutlineDocumentReport />}
             label="Reports"
             onClick={() => router.push("/user/reports")}
-          />
-        )}
-
+          />)}
       </div>
     </div>
   );

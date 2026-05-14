@@ -32,7 +32,6 @@ interface UserData {
     library?: boolean;
     reports?: boolean;
     sevaBoard?: boolean;
-      account?: boolean; // ✅ added
   }
   adminFeatures?: string[];
 }
@@ -41,7 +40,6 @@ interface AuthContextType {
   user: User | null;
   userData: UserData | null;
   loading: boolean;
-  
 }
 
 const AuthContext = createContext<AuthContextType>({

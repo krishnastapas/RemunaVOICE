@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import BackHeader from "@/components/BackHeader";
-import { FaHandsHelping, FaUserCircle } from "react-icons/fa"; // ✅ added
+import { FaHandsHelping } from "react-icons/fa";
 import { GiSunrise, GiCookingPot } from "react-icons/gi";
 import { useAuth } from "@/context/AuthContext";
 
@@ -39,7 +39,6 @@ export default function UserAdminPage() {
 
         {/* ADMIN OPTIONS */}
         <div className="grid grid-cols-2 gap-4">
-
           {/* SEVA ALLOT */}
           {adminFeatures.includes("sevaAlot") && (
             <button
@@ -89,23 +88,6 @@ export default function UserAdminPage() {
               </span>
             </button>
           )}
-
-          {/* ✅ ACCOUNT MODULE ADDED */}
-          {adminFeatures.includes("account") && (
-            <button
-              onClick={() => router.push("/user/admin/account")}
-              className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center justify-center hover:shadow-md transition"
-            >
-              <FaUserCircle className="text-3xl text-yellow-700 mb-2" />
-              <span className="font-semibold text-sm text-center">
-                Account
-              </span>
-              <span className="text-xs text-gray-500 text-center mt-1">
-                Manage users & accounts
-              </span>
-            </button>
-          )}
-
         </div>
 
         {/* NO ADMIN FEATURES */}
@@ -118,7 +100,7 @@ export default function UserAdminPage() {
         {/* FOOTER NOTE */}
         <div className="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
           <p className="text-xs text-yellow-800">
-            ⚠️ Admin access is role-based. Use responsibly.
+            ⚠️ Admin access is role‑based. Use responsibly.
           </p>
         </div>
       </div>

@@ -13,25 +13,6 @@ import EditUser from "./EditUser";
 
 /* ================= TYPES ================= */
 
-type AdminFeature =
-  | "sevaAlot"
-  | "morningProgramAlot"
-  | "kitchen"
-  | "account"; // ✅ added
-
-type UserFeature =
-  | "admin"
-  | "seva"
-  | "sadhana"
-  | "profile"
-  | "preaching"
-  | "morningProgram"
-  | "library"
-  | "kitchen"
-  | "reports"
-  | "sevaBoard"
-  | "account"; // ✅ changed to lowercase (recommended)
-
 interface Devotee {
   uid: string;
   firstName?: string;
@@ -43,30 +24,9 @@ interface Devotee {
   batchId?: string;
   batchName?: string;
 
-type DevoteeDoc = Omit<Devotee, "uid">;
-
-/* ================= CONSTANTS ================= */
-
-const ALL_USER_FEATURES: UserFeature[] = [
-  "admin",
-  "seva",
-  "sadhana",
-  "profile",
-  "preaching",
-  "morningProgram",
-  "library",
-  "kitchen",
-  "reports",
-  "sevaBoard",
-  "account", // ✅ added
-];
-
-const ALL_ADMIN_FEATURES: AdminFeature[] = [
-  "sevaAlot",
-  "morningProgramAlot",
-  "kitchen",
-  "account", // ✅ added
-];
+  features: Record<string, boolean>;
+  adminFeatures: string[];
+}
 
 /* ================= PAGE ================= */
 
@@ -273,26 +233,5 @@ function Modal({ children }: any) {
     <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
       <div className="bg-white p-6 rounded w-[400px]">{children}</div>
     </div>
-  );
-}
-
-function Checkbox({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 text-sm mb-1 capitalize">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      {label}
-    </label>
   );
 }
