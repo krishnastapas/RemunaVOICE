@@ -161,7 +161,7 @@ export default function EditTransaction({
   /* ================= UI ================= */
 
   return (
-    <div className="bg-white p-5 rounded-xl w-full md:w-[700px]">
+    <div >
       {/* HEADER */}
 
       <div className="flex justify-between mb-4">
@@ -179,7 +179,7 @@ export default function EditTransaction({
 
       {/* FORM */}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-1 gap-4">
         {/* DEPARTMENT */}
 
         <Select

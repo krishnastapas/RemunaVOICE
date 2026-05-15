@@ -21,7 +21,12 @@ import TransactionsTable from "./TransactionsTable";
 
 import Modal from "@/components/Modal";
 
-import { FaPlus } from "react-icons/fa";
+import {
+  FaArrowRight,
+  FaPlus,
+} from "react-icons/fa";
+
+import { useRouter } from "next/navigation";
 
 /* ================= TYPES ================= */
 
@@ -65,6 +70,8 @@ const MONTHS = [
 /* ================= PAGE ================= */
 
 export default function TransactionsPage() {
+  const router = useRouter();
+
   const [transactions, setTransactions] =
     useState<Transaction[]>([]);
 
@@ -121,7 +128,7 @@ export default function TransactionsPage() {
     fetchTransactions();
   }, []);
 
-  /* ================= MONTHLY DATA ================= */
+  /* ================= MONTHLY TRANSACTIONS ================= */
 
   const monthlyTransactions =
     useMemo(() => {
@@ -145,35 +152,51 @@ export default function TransactionsPage() {
       selectedMonth,
     ]);
 
-  /* ================= SUMMARY ================= */
+  /* ================= MONTHLY DONATION ================= */
 
-  const totalDonation = useMemo(() => {
-    return monthlyTransactions
-      .filter(
-        (t) => t.type === "Credit"
-      )
-      .reduce(
-        (sum, t) => sum + t.amount,
-        0
-      );
-  }, [monthlyTransactions]);
+  const monthlyDonation =
+    useMemo(() => {
+      return monthlyTransactions
+        .filter(
+          (t) => t.type === "Credit"
+        )
+        .reduce(
+          (sum, t) => sum + t.amount,
+          0
+        );
+    }, [monthlyTransactions]);
 
-  const totalExpense = useMemo(() => {
-    return monthlyTransactions
-      .filter(
-        (t) => t.type === "Debit"
-      )
-      .reduce(
-        (sum, t) => sum + t.amount,
-        0
-      );
-  }, [monthlyTransactions]);
+  /* ================= MONTHLY EXPENSE ================= */
 
-  const balance =
-    totalDonation - totalExpense;
+  const monthlyExpense =
+    useMemo(() => {
+      return monthlyTransactions
+        .filter(
+          (t) => t.type === "Debit"
+        )
+        .reduce(
+          (sum, t) => sum + t.amount,
+          0
+        );
+    }, [monthlyTransactions]);
+
+  /* ================= TOTAL BALANCE ================= */
+
+  const totalBalance = useMemo(() => {
+    return transactions.reduce(
+      (sum, t) => {
+        return t.type === "Credit"
+          ? sum + t.amount
+          : sum - t.amount;
+      },
+      0
+    );
+  }, [transactions]);
+
+  /* ================= ONLINE BALANCE ================= */
 
   const onlineBalance = useMemo(() => {
-    return monthlyTransactions
+    return transactions
       .filter(
         (t) =>
           t.paymentType === "Online"
@@ -183,10 +206,12 @@ export default function TransactionsPage() {
           ? sum + t.amount
           : sum - t.amount;
       }, 0);
-  }, [monthlyTransactions]);
+  }, [transactions]);
+
+  /* ================= CASH BALANCE ================= */
 
   const cashBalance = useMemo(() => {
-    return monthlyTransactions
+    return transactions
       .filter(
         (t) =>
           t.paymentType === "Cash"
@@ -196,7 +221,7 @@ export default function TransactionsPage() {
           ? sum + t.amount
           : sum - t.amount;
       }, 0);
-  }, [monthlyTransactions]);
+  }, [transactions]);
 
   /* ================= UI ================= */
 
@@ -218,7 +243,7 @@ export default function TransactionsPage() {
           </div>
 
           <div className="flex gap-3">
-            {/* MONTH DROPDOWN */}
+            {/* MONTH */}
 
             <select
               value={selectedMonth}
@@ -243,7 +268,7 @@ export default function TransactionsPage() {
               )}
             </select>
 
-            {/* ADD BUTTON */}
+            {/* ADD */}
 
             <button
               onClick={() =>
@@ -261,29 +286,51 @@ export default function TransactionsPage() {
         {/* SUMMARY */}
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+          {/* DONATION */}
+
           <Card
             title="Donation"
-            amount={totalDonation}
+            amount={monthlyDonation}
             color="bg-green-100 text-green-700"
+            onClick={() =>
+              router.push(
+                `/user/admin/account/donations?month=${selectedMonth}`
+              )
+            }
+            showArrow
           />
+
+          {/* EXPENSE */}
 
           <Card
             title="Expense"
-            amount={totalExpense}
+            amount={monthlyExpense}
             color="bg-red-100 text-red-700"
+            onClick={() =>
+              router.push(
+                `/user/admin/account/expenses?month=${selectedMonth}`
+              )
+            }
+            showArrow
           />
+
+          {/* TOTAL BALANCE */}
 
           <Card
             title="Balance"
-            amount={balance}
+            amount={totalBalance}
             color="bg-blue-100 text-blue-700"
           />
+
+          {/* ONLINE */}
 
           <Card
             title="Online"
             amount={onlineBalance}
             color="bg-purple-100 text-purple-700"
           />
+
+          {/* CASH */}
 
           <Card
             title="Cash"
@@ -347,23 +394,42 @@ export default function TransactionsPage() {
   );
 }
 
+/* ================= CARD ================= */
+
 function Card({
   title,
   amount,
   color,
+  onClick,
+  showArrow = false,
 }: {
   title: string;
 
   amount: number;
 
   color: string;
+
+  onClick?: () => void;
+
+  showArrow?: boolean;
 }) {
   return (
     <div
-      className={`rounded-xl p-4 ${color}`}
+      onClick={onClick}
+      className={`rounded-xl p-4 ${color} ${
+        showArrow
+          ? "cursor-pointer hover:scale-[1.02] transition"
+          : ""
+      }`}
     >
-      <div className="text-sm font-medium">
-        {title}
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-medium">
+          {title}
+        </div>
+
+        {showArrow && (
+          <FaArrowRight className="text-sm" />
+        )}
       </div>
 
       <div className="text-2xl font-bold mt-2">
