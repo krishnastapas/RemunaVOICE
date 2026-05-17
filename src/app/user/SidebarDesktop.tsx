@@ -57,6 +57,17 @@ export default function SidebarDesktop({
                         🧘 Kitchen
                     </Link>
 
+
+                     <Link
+                        href="/user/admin/account"
+                        className={`block px-4 py-2 rounded-r-full ${isActive("/admin/dashboard/sadhana-report")
+                            ? "bg-yellow-600 font-semibold"
+                            : "hover:bg-yellow-700"
+                            }`}
+                    >
+                        🧘 Account
+                    </Link>
+
                    {/*  <Link
                         href="/admin/dashboard/seva-board"
                         className={`block px-4 py-2 rounded-r-full ${isActive("/admin/dashboard/seva-board")
