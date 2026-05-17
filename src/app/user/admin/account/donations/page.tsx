@@ -10,6 +10,7 @@ import {
 import { db } from "@/lib/firebase";
 
 import {
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -26,21 +27,13 @@ import { FaArrowLeft } from "react-icons/fa";
 
 interface Transaction {
   id: string;
-
   dept: string;
-
   devoteeName: string;
-
   amount: number;
-
   date: string;
-
   type: "Credit" | "Debit";
-
   paymentType: "Online" | "Cash";
-
   purpose: string;
-
   remarks: string;
 }
 
@@ -61,9 +54,25 @@ const MONTHS = [
   "December",
 ];
 
-/* ================= PAGE ================= */
+/* ================= MAIN PAGE ================= */
 
 export default function DonationsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-5">
+          Loading...
+        </div>
+      }
+    >
+      <DonationsContent />
+    </Suspense>
+  );
+}
+
+/* ================= CONTENT ================= */
+
+function DonationsContent() {
   const router = useRouter();
 
   const searchParams =
@@ -93,16 +102,14 @@ export default function DonationsPage() {
 
       const snap = await getDocs(q);
 
-      const list: Transaction[] = snap.docs.map(
-        (doc) => ({
+      const list: Transaction[] =
+        snap.docs.map((doc) => ({
           id: doc.id,
-
           ...(doc.data() as Omit<
             Transaction,
             "id"
           >),
-        })
-      );
+        }));
 
       setTransactions(list);
     } catch (error) {
@@ -158,8 +165,6 @@ export default function DonationsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
-        {/* HEADER */}
-
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() =>
@@ -183,8 +188,6 @@ export default function DonationsPage() {
           </div>
         </div>
 
-        {/* TABLE */}
-
         <div className="bg-white border rounded-xl overflow-hidden">
           <div className="overflow-auto">
             <table className="w-full text-sm">
@@ -193,25 +196,19 @@ export default function DonationsPage() {
                   <Th>
                     Devotee
                   </Th>
-
                   <Th>
                     Department
                   </Th>
-
                   <Th>
                     Amount
                   </Th>
-
                   <Th>Date</Th>
-
                   <Th>
                     Payment
                   </Th>
-
                   <Th>
                     Purpose
                   </Th>
-
                   <Th>
                     Remarks
                   </Th>

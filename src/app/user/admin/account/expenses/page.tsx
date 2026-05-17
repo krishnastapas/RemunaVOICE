@@ -10,6 +10,7 @@ import {
 import { db } from "@/lib/firebase";
 
 import {
+  Suspense,
   useEffect,
   useMemo,
   useState,
@@ -64,6 +65,22 @@ const MONTHS = [
 /* ================= PAGE ================= */
 
 export default function ExpensesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="p-5">
+          Loading...
+        </div>
+      }
+    >
+      <ExpensesContent />
+    </Suspense>
+  );
+}
+
+/* ================= CONTENT ================= */
+
+function ExpensesContent() {
   const router = useRouter();
 
   const searchParams =
@@ -93,16 +110,15 @@ export default function ExpensesPage() {
 
       const snap = await getDocs(q);
 
-      const list: Transaction[] = snap.docs.map(
-        (doc) => ({
+      const list: Transaction[] =
+        snap.docs.map((doc) => ({
           id: doc.id,
 
           ...(doc.data() as Omit<
             Transaction,
             "id"
           >),
-        })
-      );
+        }));
 
       setTransactions(list);
     } catch (error) {
