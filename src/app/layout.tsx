@@ -4,8 +4,8 @@ import { AuthProvider } from "@/context/AuthContext";
 import ClientFCMSetup from "@/components/ClientProviders";
 
 export const metadata: Metadata = {
-  title: "C-Cube Seva Board",
-  description: "Hare Krishna Devotee Seva Management System",
+  title: "Remuna VOICE",
+  description: "",
 };
 
 export default function RootLayout({
