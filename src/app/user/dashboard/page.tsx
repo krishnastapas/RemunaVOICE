@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import { auth } from "@/lib/firebase";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -73,9 +73,14 @@ export default function UserDashboard() {
   /* 📜 DAILY QUOTE */
   useEffect(() => {
     const loadQuote = async () => {
-      const res = await fetch("/api/daily-quote");
-      const data = await res.json();
-      setDailyQuote(data.quote);
+      const snap = await getDoc(doc(db, "daily_quote", "current"));
+      if (snap.exists()) {
+        const data = snap.data();
+        setDailyQuote({
+          text: data.text || "",
+          imageUrl: data.imageUrl || "",
+        });
+      }
     };
 
     loadQuote();
@@ -134,14 +139,14 @@ export default function UserDashboard() {
 
           {dailyQuote.text && (
             <p className="text-sm italic text-gray-800">
-              “{dailyQuote.text}”
+              {dailyQuote.text}
             </p>
           )}
         </div>
       )}
 
       {/* FEATURE GRID */}
-      <div className="grid grid-cols-2 gap-4 px-4 pb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 px-4 pb-10">
         {features.seva && (
           <Card
             icon={<FaHandsHelping />}

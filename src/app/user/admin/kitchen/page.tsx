@@ -46,7 +46,7 @@ export default function KitchenHomePage() {
           <KitchenCard
             icon={<FaCalendarAlt />}
             title="Menu Planner"
-            desc="Date & devotee wise"
+            desc="Daily meals with timing & recipes"
             color="bg-orange-100 text-orange-700"
             onClick={() => router.push("/user/admin/kitchen/menu")}
           />

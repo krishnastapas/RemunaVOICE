@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { db } from "@/lib/firebase";
 import {
   collection,
@@ -10,6 +10,10 @@ import {
   setDoc,
 } from "firebase/firestore";
 import Select from "react-select";
+import {
+  formatIndianDate,
+  getIndianWeekDates,
+} from "@/utils/date";
 
 /* =====================
  TYPES
@@ -56,46 +60,40 @@ const MORNING_TEMPLATE: Section[] = [
   { title: "Class Place", type: "text", value: "" },
 ];
 
-const WEEK_DAYS = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
 /* =====================
  DATE HELPERS
 ===================== */
-
-function getDateForDay(dayName: string) {
-  const today = new Date();
-  const todayIndex = today.getDay() === 0 ? 7 : today.getDay();
-  const targetIndex = WEEK_DAYS.indexOf(dayName) + 1;
-
-  let diff = targetIndex - todayIndex;
-  if (diff < 0) diff += 7;
-
-  const d = new Date(today);
-  d.setDate(today.getDate() + diff);
-  return d;
-}
-
-function formatDate(d: Date) {
-  return d.toISOString().split("T")[0];
-}
 
 /* =====================
  PAGE
 ===================== */
 
 export default function AdminMorningProgram() {
+  const [weekOffset, setWeekOffset] = useState(1);
+  const weekDates = useMemo(() => getIndianWeekDates(weekOffset), [weekOffset]);
+  const [selectedDay, setSelectedDay] = useState(weekDates[0]?.label ?? "Monday");
   const [devotees, setDevotees] = useState<DevoteeOption[]>([]);
   const [sections, setSections] = useState<Section[]>([]);
-  const [selectedDay, setSelectedDay] = useState("Monday");
-  const [selectedDate, setSelectedDate] = useState("");
+  const selectedDate = useMemo(
+    () =>
+      weekDates.find((day) => day.label === selectedDay)
+        ?.dateString ?? weekDates[0].dateString,
+    [selectedDay, weekDates]
+  );
+
+  useEffect(() => {
+    setSelectedDay((current) =>
+      weekDates.some((day) => day.label === current)
+        ? current
+        : weekDates[0]?.label ?? "Monday"
+    );
+  }, [weekDates]);
+
+  const previousDate = useMemo(() => {
+    const date = new Date(`${selectedDate}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() - 7);
+    return date.toISOString().split("T")[0];
+  }, [selectedDate]);
   const [saving, setSaving] = useState(false);
 
   /* 🔹 LOAD DEVOTEES */
@@ -105,9 +103,7 @@ export default function AdminMorningProgram() {
       setDevotees(
         snap.docs.map((d) => ({
           value: d.id,
-          label: `${d.data().firstName || ""} ${
-            d.data().lastName || ""
-          } Pr`.trim(),
+          label: `${d.data().firstName || ""} Pr`.trim(),
         }))
       );
     };
@@ -117,22 +113,26 @@ export default function AdminMorningProgram() {
   /* 🔹 LOAD DAY DATA */
   useEffect(() => {
     const loadDay = async () => {
-      const dateObj = getDateForDay(selectedDay);
-      const dateStr = formatDate(dateObj);
-      setSelectedDate(dateStr);
+      const currentRef = doc(db, "morningProgramAllotments", selectedDate);
+      const currentSnap = await getDoc(currentRef);
 
-      const ref = doc(db, "morningProgramAllotments", dateStr);
-      const snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        setSections(snap.data().sections);
-      } else {
-        setSections(JSON.parse(JSON.stringify(MORNING_TEMPLATE)));
+      if (currentSnap.exists()) {
+        setSections(currentSnap.data().sections ?? JSON.parse(JSON.stringify(MORNING_TEMPLATE)));
+        return;
       }
+
+      const previousRef = doc(db, "morningProgramAllotments", previousDate);
+      const previousSnap = await getDoc(previousRef);
+      if (previousSnap.exists()) {
+        setSections(previousSnap.data().sections ?? JSON.parse(JSON.stringify(MORNING_TEMPLATE)));
+        return;
+      }
+
+      setSections(JSON.parse(JSON.stringify(MORNING_TEMPLATE)));
     };
 
     loadDay();
-  }, [selectedDay]);
+  }, [selectedDate, previousDate]);
 
   /* 🔹 SAVE */
   const save = async () => {
@@ -142,7 +142,7 @@ export default function AdminMorningProgram() {
       sections,
     });
     setSaving(false);
-    alert("✅ Morning Program saved for " + selectedDate);
+    alert("✅ Morning Program saved for " + formatIndianDate(selectedDate));
   };
 
   return (
@@ -151,29 +151,55 @@ export default function AdminMorningProgram() {
         Morning Program Allotment
       </h1>
 
-      <p className="text-center text-sm text-gray-600 mb-4">
-        Date: <strong>{selectedDate}</strong>
-      </p>
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="text-center md:text-left">
+          <p className="text-sm text-gray-600 mb-2">
+            Editing weekly morning program allotment.
+          </p>
+          <p className="text-sm text-gray-600">
+            Week: <strong>{weekDates[0].formattedDate}</strong> — <strong>{weekDates[6].formattedDate}</strong>
+          </p>
+        </div>
+
+        <div className="flex items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setWeekOffset((offset) => offset - 1)}
+            className="rounded-full border border-yellow-200 bg-white px-3 py-2 text-yellow-800 hover:bg-yellow-50"
+            aria-label="Previous week"
+          >
+            ←
+          </button>
+          <div className="rounded-xl bg-yellow-50 border border-yellow-100 px-4 py-2 text-sm text-yellow-900">
+            {selectedDay}, {formatIndianDate(selectedDate)}
+          </div>
+          <button
+            type="button"
+            onClick={() => setWeekOffset((offset) => offset + 1)}
+            className="rounded-full border border-yellow-200 bg-white px-3 py-2 text-yellow-800 hover:bg-yellow-50"
+            aria-label="Next week"
+          >
+            →
+          </button>
+        </div>
+      </div>
 
       {/* DAY BUTTONS */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {WEEK_DAYS.map((d) => {
-          const date = formatDate(getDateForDay(d));
-          return (
-            <button
-              key={d}
-              onClick={() => setSelectedDay(d)}
-              className={`px-3 py-1 rounded text-sm font-semibold ${
-                selectedDay === d
-                  ? "bg-yellow-700 text-white"
-                  : "bg-yellow-200"
-              }`}
-            >
-              {d}
-              <div className="text-xs">{date}</div>
-            </button>
-          );
-        })}
+        {weekDates.map((day) => (
+          <button
+            key={day.label}
+            onClick={() => setSelectedDay(day.label)}
+            className={`px-3 py-1 rounded text-sm font-semibold ${
+              selectedDay === day.label
+                ? "bg-yellow-700 text-white"
+                : "bg-yellow-200"
+            }`}
+          >
+            {day.label}
+            <div className="text-xs">{day.formattedDate}</div>
+          </button>
+        ))}
       </div>
 
       {/* SECTIONS */}

@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { indianDateKey } from "@/utils/date";
 
 /* =====================
  TYPES
@@ -44,7 +45,7 @@ interface MySevaItem {
 ===================== */
 
 function todayKey() {
-  return new Date().toISOString().split("T")[0];
+  return indianDateKey();
 }
 
 function nowISO() {

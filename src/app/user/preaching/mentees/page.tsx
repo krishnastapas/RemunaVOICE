@@ -108,7 +108,7 @@ export default function MyMenteesPage() {
             <button
               key={m.id}
               onClick={() =>
-                router.push(`/user/preaching/mentees/${m.id}`)
+                router.push(`/user/preaching/mentees/detail?id=${m.id}`)
               }
               className="w-full bg-white border border-yellow-200 rounded-xl p-4 shadow hover:shadow-md transition text-left"
             >

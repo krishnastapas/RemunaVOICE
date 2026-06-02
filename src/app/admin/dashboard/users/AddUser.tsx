@@ -185,9 +185,15 @@ export default function AddUser({ onClose, fetchUsers }: any) {
 
 function Modal({ children, onClose }: any) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex justify-center items-center">
-      <div className="bg-white p-6 rounded w-[400px] relative">
-        <button onClick={onClose} className="absolute right-2 top-2">✕</button>
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="relative w-full max-w-2xl max-h-[calc(100vh-4rem)] overflow-y-auto bg-white p-6 rounded-3xl shadow-xl">
+        <button
+          onClick={onClose}
+          className="absolute right-3 top-3 z-20 rounded-full bg-yellow-100 p-2 text-lg text-yellow-800 shadow-sm hover:bg-yellow-200"
+          aria-label="Close modal"
+        >
+          ✕
+        </button>
         {children}
       </div>
     </div>

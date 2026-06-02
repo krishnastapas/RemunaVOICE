@@ -142,6 +142,16 @@ export default function SidebarDesktop({
             />
           )}
 
+          {/* KITCHEN - Daily Items */}
+          <SidebarItem
+            href="/user/kitchen"
+            active={isActive(
+              "/user/kitchen"
+            )}
+            label="Today's Kitchen"
+            icon="🍲"
+          />
+
           {features.library && (
             <SidebarItem
               href="/user/library"
@@ -196,9 +206,9 @@ export default function SidebarDesktop({
                 "morningProgramAlot"
               ) && (
                 <SidebarItem
-                  href="/user/admin/morning-program-allot"
+                  href="/user/admin/morning-program"
                   active={isActive(
-                    "/user/admin/morning-program-allot"
+                    "/user/admin/morning-program"
                   )}
                   label="Morning Program"
                   icon="🌅"

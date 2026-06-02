@@ -38,7 +38,7 @@ export default function TransactionsTable({
   const [deleteLoading, setDeleteLoading] =
     useState<string>("");
 
-  const PER_PAGE = 5;
+  const PER_PAGE = 50;
 
   const totalPages = Math.ceil(
     data.length / PER_PAGE

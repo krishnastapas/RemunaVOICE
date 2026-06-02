@@ -142,7 +142,7 @@ export default function PreachingInteractionsPage() {
                 key={i.id}
                 onClick={() =>
                   router.push(
-                    `/user/preaching/interactions/${i.id}`
+                    `/user/preaching/interactions/detail?id=${i.id}`
                   )
                 }
                 className="bg-white border border-yellow-200 rounded-lg p-3 shadow-sm cursor-pointer hover:bg-yellow-50"

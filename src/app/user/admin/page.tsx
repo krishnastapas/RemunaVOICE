@@ -86,7 +86,7 @@ export default function UserAdminPage() {
             <button
               onClick={() =>
                 router.push(
-                  "/user/admin/morning-program-allot"
+                  "/user/admin/morning-program"
                 )
               }
               className="bg-white border border-yellow-300 rounded-xl p-4 shadow flex flex-col items-center justify-center hover:shadow-md transition"
