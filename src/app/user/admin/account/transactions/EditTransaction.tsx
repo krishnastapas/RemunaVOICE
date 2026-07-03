@@ -18,6 +18,7 @@ import {
 import { db } from "@/lib/firebase";
 
 import { Transaction } from "./page";
+import DonorNameField from "./DonorNameField";
 
 /* ================= TYPES ================= */
 
@@ -198,18 +199,15 @@ export default function EditTransaction({
           )}
         />
 
-        {/* DEVOTEE */}
+        {/* DONOR / DEVOTEE */}
 
-        <Input
-          label="Devotee Name"
+        <DonorNameField
           value={form.devoteeName}
-          onChange={(
-            e: ChangeEvent<HTMLInputElement>
-          ) =>
+          transactionType={form.type}
+          onChange={(value) =>
             setForm({
               ...form,
-              devoteeName:
-                e.target.value,
+              devoteeName: value,
             })
           }
         />

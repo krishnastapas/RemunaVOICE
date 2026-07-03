@@ -149,11 +149,11 @@ export default function KitchenDailyPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-        <BackPageName title="Today's Kitchen Items" link="/user/dashboard" />
+        <BackPageName title={"Today's Kitchen Items"} link="/user/dashboard" />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mb-4"></div>
-            <p className="text-gray-600">Loading today's items...</p>
+            <p className="text-gray-600">Loading today&apos;s items...</p>
           </div>
         </div>
       </div>
@@ -162,7 +162,7 @@ export default function KitchenDailyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-      <BackPageName title="Today's Kitchen Items" link="/user/dashboard" />
+      <BackPageName title={"Today's Kitchen Items"} link="/user/dashboard" />
 
       <div className="max-w-2xl mx-auto p-4">
         {/* TODAY'S DATE */}

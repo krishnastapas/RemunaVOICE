@@ -43,7 +43,7 @@ export default function AccountHomePage() {
             desc="Regular donor details"
             color="bg-pink-100 text-pink-700"
             onClick={() =>
-              router.push("/user/admin/accounts/donors")
+              router.push("/user/admin/account/donors")
             }
           />
 

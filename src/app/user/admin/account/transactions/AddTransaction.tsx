@@ -16,6 +16,8 @@ import {
 
 import { db } from "@/lib/firebase";
 
+import DonorNameField from "./DonorNameField";
+
 /* ================= TYPES ================= */
 
 interface AddTransactionProps {
@@ -181,19 +183,32 @@ export default function AddTransaction({
             (d) => d.name
           )}
         />
-
-        {/* DEVOTEE NAME */}
-
-        <Input
-          label="Devotee Name"
-          value={form.devoteeName}
+        <Select
+          label="Transaction Type"
+          value={form.type}
           onChange={(
-            e: ChangeEvent<HTMLInputElement>
+            e: ChangeEvent<HTMLSelectElement>
           ) =>
             setForm({
               ...form,
-              devoteeName:
-                e.target.value,
+              type: e.target
+                .value as FormState["type"],
+            })
+          }
+          options={[
+            "Credit",
+            "Debit",
+          ]}
+        />
+        {/* DONOR / DEVOTEE NAME */}
+
+        <DonorNameField
+          value={form.devoteeName}
+          transactionType={form.type}
+          onChange={(value) =>
+            setForm({
+              ...form,
+              devoteeName: value,
             })
           }
         />
@@ -214,6 +229,23 @@ export default function AddTransaction({
           }
         />
 
+        <Select
+          label="Payment Type"
+          value={form.paymentType}
+          onChange={(
+            e: ChangeEvent<HTMLSelectElement>
+          ) =>
+            setForm({
+              ...form,
+              paymentType: e.target
+                .value as FormState["paymentType"],
+            })
+          }
+          options={[
+            "Online",
+            "Cash",
+          ]}
+        />
         {/* DATE */}
 
         <Input
@@ -232,43 +264,10 @@ export default function AddTransaction({
 
         {/* TYPE */}
 
-        <Select
-          label="Transaction Type"
-          value={form.type}
-          onChange={(
-            e: ChangeEvent<HTMLSelectElement>
-          ) =>
-            setForm({
-              ...form,
-              type: e.target
-                .value as FormState["type"],
-            })
-          }
-          options={[
-            "Credit",
-            "Debit",
-          ]}
-        />
+
 
         {/* PAYMENT TYPE */}
 
-        <Select
-          label="Payment Type"
-          value={form.paymentType}
-          onChange={(
-            e: ChangeEvent<HTMLSelectElement>
-          ) =>
-            setForm({
-              ...form,
-              paymentType: e.target
-                .value as FormState["paymentType"],
-            })
-          }
-          options={[
-            "Online",
-            "Cash",
-          ]}
-        />
 
         {/* PURPOSE */}
 

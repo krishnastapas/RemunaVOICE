@@ -183,13 +183,6 @@ export default function AdminSadhanaReport() {
   };
 
 
-  const sendNow = async () => {
-    await fetch("/api/admin/send-sadhana-notification", {
-      method: "POST",
-    });
-    alert("Notification sent 🙏");
-  };
-
   /* -------- UI -------- */
   return (
     <div className="p-6">
@@ -243,13 +236,6 @@ export default function AdminSadhanaReport() {
           Export PDF
         </button>
 
-
-        <button
-          onClick={sendNow}
-          className="bg-yellow-700 text-white px-4 py-2 rounded"
-        >
-          🔔 Send Sadhana Reminder Now
-        </button>
       </div>
 
       {loading && <p>Loading...</p>}
